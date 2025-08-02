@@ -34,6 +34,6 @@ export default {
 .footer-text {
   color: #444;
   font-size: 15px;
-  font-family: 'Montserrat', 'Arial', sans-serif;
+  font-family: 'ProximaNovaSemibold', sans-serif;
 }
 </style>

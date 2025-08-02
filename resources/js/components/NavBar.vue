@@ -2,15 +2,18 @@
   <nav class="opeluce-navbar shadow-sm">
     <div class="container d-flex align-items-center justify-content-between py-2">
       <div class="d-flex align-items-center">
-        <img :src="baseUrl + '/images/logo-pages.svg'" alt="Opeluce Logo" class="opeluce-navbar-logo me-3" />
+        <router-link to="/">
+          <img :src="baseUrl + '/images/logo-pages.svg'" alt="Opeluce Logo" class="opeluce-navbar-logo me-3" />
+        </router-link>
       </div>
       <div class="flex-grow-1 d-flex justify-content-center">
         <ul class="nav">
-          <li class="nav-item">
-            <router-link class="nav-link opeluce-navbar-link" to="/">Inicio</router-link>
-          </li>
+          <!-- Inicio removed, logo is now the home link -->
           <li class="nav-item">
             <router-link class="nav-link opeluce-navbar-link" to="/users">ADM. USUARIOS</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link opeluce-navbar-link" to="/devices">ADM. DISPOSITIVOS</router-link>
           </li>
         </ul>
       </div>
@@ -57,7 +60,7 @@ export default {
   background: #fff;
   border-bottom: 1px solid #eaeaea;
   min-height: 70px;
-  font-family: 'Montserrat', 'Arial', sans-serif;
+  font-family: 'ProximaNovaSemibold', sans-serif;
   position: sticky;
   top: 0;
   z-index: 101;
@@ -74,7 +77,7 @@ export default {
 .opeluce-navbar-link {
   color: #444;
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 400;
   margin: 0 1.2rem;
   transition: color 0.2s;
   position: relative;
