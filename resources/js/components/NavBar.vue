@@ -79,6 +79,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 70px;
+  justify-content: center;
 }
 .opeluce-username {
   display: flex;
@@ -90,7 +92,8 @@ export default {
   border-radius: 20px;
   background: #fafdff;
   transition: background 0.2s;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0;
+  height: 100%;
 }
 .opeluce-username-text {
   font-family: 'ProximaNovaSemibold', sans-serif;
@@ -103,7 +106,7 @@ export default {
 /* Only one .opeluce-user-submenu style block, improved alignment */
 .opeluce-user-submenu {
   position: absolute;
-  top: 110%;
+  top: 85%;
   left: 50%;
   transform: translateX(-50%);
   min-width: 220px;
@@ -145,7 +148,7 @@ export default {
 }
 .opeluce-user-submenu {
   position: absolute;
-  top: 110%;
+  top: 85%;
   left: 50%;
   transform: translateX(-50%);
   min-width: 220px;
