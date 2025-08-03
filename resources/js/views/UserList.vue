@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-4">
+  <div class="container py-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="opeluce-page-title">
         <i class="fas fa-users me-3"></i>Administración de Usuarios
@@ -100,37 +100,103 @@
               <th><i class="fas fa-cog me-2"></i>Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id" class="opeluce-table-row">
-              <td>
-                <div class="fw-semibold">{{ user.name }}</div>
+                    <tbody>
+            <tr v-if="loading">
+              <td colspan="5" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
               </td>
-              <td class="text-muted">{{ user.email }}</td>
-              <td>
-                <span class="opeluce-badge">{{ user.username }}</span>
+            </tr>
+            <tr v-else-if="paginatedUsers.length === 0">
+              <td colspan="5" class="text-center py-4 text-muted">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <div>No hay usuarios para mostrar</div>
               </td>
-              <td class="text-muted">{{ formatDate(user.created_at) }}</td>
+            </tr>
+            <tr v-else v-for="user in paginatedUsers" :key="user.id">
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ formatDate(user.created_at) }}</td>
               <td>
                 <div class="btn-group" role="group">
                   <router-link 
-                    :to="`/users/${user.id}/edit`" 
-                    class="btn btn-sm btn-outline-primary"
-                    title="Editar usuario"
-                  >
-                    <i class="fas fa-edit"></i>
+                    :to="`/admin/users/${user.id}/edit`" 
+                    class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-edit"></i> Editar
                   </router-link>
                   <button 
                     @click="deleteUser(user.id)" 
-                    class="btn btn-sm btn-outline-danger"
-                    title="Eliminar usuario"
-                  >
-                    <i class="fas fa-trash"></i>
+                    class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-trash"></i> Eliminar
                   </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="opeluce-pagination p-3 border-top">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="opeluce-pagination-info">
+            <span class="text-muted">
+              Mostrando {{ startItem }} - {{ endItem }} de {{ totalItems }} usuarios
+            </span>
+          </div>
+          <nav aria-label="Paginación de usuarios">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <button 
+                  class="page-link opeluce-page-link" 
+                  @click="changePage(currentPage - 1)"
+                  :disabled="currentPage === 1"
+                >
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+              </li>
+              
+              <li 
+                v-for="page in visiblePages" 
+                :key="page"
+                class="page-item"
+                :class="{ active: page === currentPage }"
+              >
+                <button 
+                  class="page-link opeluce-page-link"
+                  @click="changePage(page)"
+                  :class="{ 'opeluce-page-active': page === currentPage }"
+                >
+                  {{ page }}
+                </button>
+              </li>
+              
+              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <button 
+                  class="page-link opeluce-page-link" 
+                  @click="changePage(currentPage + 1)"
+                  :disabled="currentPage === totalPages"
+                >
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+          <div class="opeluce-items-per-page">
+            <select 
+              v-model="itemsPerPage" 
+              class="form-select form-select-sm opeluce-select"
+              @change="changeItemsPerPage"
+            >
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -152,7 +218,11 @@ const filters = ref({
   createdAt: ''
 });
 
-// Computed property for filtered users
+// Pagination reactive data
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+
+// Computed property for filtered users (before pagination)
 const filteredUsers = computed(() => {
   let filtered = users.value;
 
@@ -188,6 +258,69 @@ const filteredUsers = computed(() => {
   return filtered;
 });
 
+// Computed properties for pagination
+const totalItems = computed(() => filteredUsers.value.length);
+const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+
+const startItem = computed(() => {
+  if (totalItems.value === 0) return 0;
+  return (currentPage.value - 1) * itemsPerPage.value + 1;
+});
+
+const endItem = computed(() => {
+  const end = currentPage.value * itemsPerPage.value;
+  return end > totalItems.value ? totalItems.value : end;
+});
+
+// Computed property for paginated users (final result)
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredUsers.value.slice(start, end);
+});
+
+// Computed property for visible page numbers
+const visiblePages = computed(() => {
+  const pages = [];
+  const total = totalPages.value;
+  const current = currentPage.value;
+  
+  if (total <= 7) {
+    // Show all pages if 7 or fewer
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show smart pagination
+    if (current <= 4) {
+      // Show first 5 pages
+      for (let i = 1; i <= 5; i++) {
+        pages.push(i);
+      }
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 3) {
+      // Show last 5 pages
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current
+      pages.push(1);
+      pages.push('...');
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push(i);
+      }
+      pages.push('...');
+      pages.push(total);
+    }
+  }
+  
+  return pages.filter(page => page !== '...' || !pages.includes('...'));
+});
+
 async function loadUsers() {
   loading.value = true;
   error.value = '';
@@ -211,7 +344,8 @@ async function loadUsers() {
 }
 
 function applyFilters() {
-  // Filters are applied automatically through the computed property
+  // Reset to first page when filters change
+  currentPage.value = 1;
   console.log('Filters applied:', filters.value);
 }
 
@@ -222,6 +356,17 @@ function clearFilters() {
     username: '',
     createdAt: ''
   };
+  currentPage.value = 1;
+}
+
+function changePage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+}
+
+function changeItemsPerPage() {
+  currentPage.value = 1; // Reset to first page when changing items per page
 }
 
 async function deleteUser(id) {
@@ -229,6 +374,12 @@ async function deleteUser(id) {
     try {
       await axios.delete(`/api/users/${id}`);
       await loadUsers(); // Reload the list
+      
+      // Adjust current page if necessary
+      if (paginatedUsers.value.length === 0 && currentPage.value > 1) {
+        currentPage.value--;
+      }
+      
       // Show success message
       alert('Usuario eliminado exitosamente.');
     } catch (err) {
@@ -418,5 +569,96 @@ onMounted(() => {
 .opeluce-filter-input::placeholder {
   color: #999;
   font-size: 13px;
+}
+
+.pagination-controls {
+  background-color: #f8f9fa;
+  border-top: 1px solid #eaeaea;
+  padding: 1rem 1.2rem;
+  border-radius: 0 0 12px 12px;
+  margin-bottom: 2rem;
+}
+
+.pagination-info {
+  color: #626161;
+  font-size: 0.875rem;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-weight: 500;
+}
+
+.items-per-page {
+  min-width: 80px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-size: 14px;
+}
+
+.items-per-page:focus {
+  border-color: #009fe3;
+  box-shadow: 0 0 0 0.15rem rgba(0, 159, 227, 0.15);
+  outline: none;
+}
+
+.pagination .page-link {
+  color: #626161;
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 0 2px;
+  transition: all 0.2s;
+}
+
+.pagination .page-link:hover {
+  color: #009fe3;
+  background-color: #f8fffe;
+  border-color: #009fe3;
+  transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #009fe3;
+  border-color: #009fe3;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 159, 227, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #999;
+  background-color: #f8f9fa;
+  border-color: #ddd;
+  transform: none;
+}
+
+.pagination .page-link:focus {
+  box-shadow: 0 0 0 0.15rem rgba(0, 159, 227, 0.25);
+}
+
+@media (max-width: 768px) {
+  .pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .pagination-controls .d-flex:first-child {
+    justify-content: center;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+  
+  .pagination .page-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 14px;
+  }
 }
 </style>
