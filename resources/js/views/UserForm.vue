@@ -72,19 +72,39 @@
             </div>
             
             <div class="col-md-6">
-              <label for="role" class="form-label opeluce-label">
+              <label class="form-label opeluce-label">
                 <i class="fas fa-shield me-2"></i>Rol del Usuario
               </label>
-              <select 
-                v-model="form.role" 
-                id="role" 
-                class="form-select opeluce-input"
-                required
-              >
-                <option value="">Seleccione un rol</option>
-                <option :value="false">Usuario Normal</option>
-                <option :value="true">Administrador</option>
-              </select>
+              <div class="mt-2">
+                <div class="form-check mb-2">
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    name="role" 
+                    id="roleUser" 
+                    :value="false" 
+                    v-model="form.role"
+                  >
+                  <label class="form-check-label opeluce-radio-label" for="roleUser">
+                    <i class="fas fa-user me-2 text-primary"></i>Usuario Normal
+                    <small class="text-muted d-block">Acceso limitado a funciones básicas</small>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    name="role" 
+                    id="roleAdmin" 
+                    :value="true" 
+                    v-model="form.role"
+                  >
+                  <label class="form-check-label opeluce-radio-label" for="roleAdmin">
+                    <i class="fas fa-shield-alt me-2 text-danger"></i>Administrador
+                    <small class="text-muted d-block">Acceso completo al sistema</small>
+                  </label>
+                </div>
+              </div>
             </div>
             
             <div v-if="error" class="col-12">
@@ -276,5 +296,37 @@ onMounted(() => {
 
 .gap-3 {
   gap: 1rem;
+}
+
+.opeluce-radio-label {
+  color: #626161;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  border: 2px solid #eaeaea;
+  border-radius: 8px;
+  margin-left: 0.5rem;
+  transition: all 0.2s;
+  display: block;
+  width: 100%;
+}
+
+.form-check-input:checked + .opeluce-radio-label {
+  border-color: #009fe3;
+  background-color: rgba(0, 159, 227, 0.05);
+}
+
+.form-check-input:focus + .opeluce-radio-label {
+  box-shadow: 0 0 0 0.2rem rgba(0, 159, 227, 0.25);
+}
+
+.form-check {
+  margin-bottom: 0;
+}
+
+.form-check-input {
+  margin-top: 0.5rem;
+  margin-left: -1.5rem;
 }
 </style>

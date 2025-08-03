@@ -18,6 +18,10 @@ const routes = [
       { path: 'users', component: UserList },
       { path: 'users/create', component: UserForm },
       { path: 'users/:id/edit', component: UserForm, props: true },
+      // Admin routes (for backwards compatibility)
+      { path: 'admin/users', component: UserList },
+      { path: 'admin/users/create', component: UserForm },
+      { path: 'admin/users/:id/edit', component: UserForm, props: true },
     ],
   },
 ]
