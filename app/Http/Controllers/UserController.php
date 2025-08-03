@@ -24,16 +24,16 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users,username|alpha_dash',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'role' => 'required|boolean',
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'username' => $validated['username'],
-            'email' => $validated['email'],
+            'name' => strtoupper($validated['name']),
+            'username' => strtoupper($validated['username']),
+            'email' => strtoupper($validated['email']),
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
@@ -57,15 +57,26 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'string|max:255',
-            'username' => 'string|max:255|unique:users,username,' . $user->id,
-            'email' => 'string|email|max:255|unique:users,email,' . $user->id,
+            'name' => 'sometimes|string|max:255',
+            'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id . '|alpha_dash',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'sometimes|string|min:8',
             'role' => 'sometimes|boolean',
         ]);
 
         if ($request->has('password')) {
             $validated['password'] = Hash::make($validated['password']);
+        }
+
+        // Convert text fields to uppercase
+        if (isset($validated['name'])) {
+            $validated['name'] = strtoupper($validated['name']);
+        }
+        if (isset($validated['username'])) {
+            $validated['username'] = strtoupper($validated['username']);
+        }
+        if (isset($validated['email'])) {
+            $validated['email'] = strtoupper($validated['email']);
         }
 
         $user->update($validated);

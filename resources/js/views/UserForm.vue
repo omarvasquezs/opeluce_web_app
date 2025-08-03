@@ -24,6 +24,7 @@
                 id="name" 
                 class="form-control opeluce-input" 
                 placeholder="Ingrese el nombre completo"
+                @input="form.name = $event.target.value.toUpperCase()"
                 required 
               />
             </div>
@@ -38,6 +39,7 @@
                 id="username" 
                 class="form-control opeluce-input" 
                 placeholder="Ingrese el nombre de usuario"
+                @input="form.username = $event.target.value.toUpperCase()"
                 required 
               />
             </div>
@@ -52,6 +54,7 @@
                 id="email" 
                 class="form-control opeluce-input" 
                 placeholder="usuario@ejemplo.com"
+                @input="form.email = $event.target.value.toUpperCase()"
                 required 
               />
             </div>

@@ -45,7 +45,7 @@
               type="text" 
               class="form-control opeluce-filter-input" 
               placeholder="Buscar por nombre..."
-              @input="applyFilters"
+              @input="filters.name = $event.target.value.toUpperCase(); applyFilters()"
             />
           </div>
           <div class="col-md-3">
@@ -55,7 +55,7 @@
               type="text" 
               class="form-control opeluce-filter-input" 
               placeholder="Buscar por email..."
-              @input="applyFilters"
+              @input="filters.email = $event.target.value.toUpperCase(); applyFilters()"
             />
           </div>
           <div class="col-md-2">
@@ -65,7 +65,7 @@
               type="text" 
               class="form-control opeluce-filter-input" 
               placeholder="Buscar usuario..."
-              @input="applyFilters"
+              @input="filters.username = $event.target.value.toUpperCase(); applyFilters()"
             />
           </div>
           <div class="col-md-2">
@@ -110,7 +110,7 @@
               <th><i class="fas fa-at me-2"></i>Usuario</th>
               <th><i class="fas fa-shield me-2"></i>Rol</th>
               <th><i class="fas fa-calendar me-2"></i>Fecha de Creación</th>
-              <th><i class="fas fa-cog me-2"></i>Acciones</th>
+              <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
             </tr>
           </thead>
                     <tbody>
@@ -141,17 +141,19 @@
                 </span>
               </td>
               <td>{{ formatDate(user.created_at) }}</td>
-              <td>
-                <div class="btn-group" role="group">
+              <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center" role="group">
                   <router-link 
                     :to="`/admin/users/${user.id}/edit`" 
-                    class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-edit"></i> Editar
+                    class="btn btn-outline-primary btn-sm opeluce-action-btn"
+                    title="Editar usuario">
+                    <i class="fas fa-edit"></i>
                   </router-link>
                   <button 
                     @click="deleteUser(user.id)" 
-                    class="btn btn-outline-danger btn-sm">
-                    <i class="fas fa-trash"></i> Eliminar
+                    class="btn btn-outline-danger btn-sm opeluce-action-btn"
+                    title="Eliminar usuario">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </td>
@@ -548,14 +550,47 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.btn-outline-primary:hover {
-  background-color: #009fe3;
+.opeluce-action-btn {
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1.5px solid;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  white-space: nowrap;
+}
+
+.opeluce-action-btn.btn-outline-primary {
+  color: #009fe3;
   border-color: #009fe3;
 }
 
-.btn-outline-danger:hover {
+.opeluce-action-btn.btn-outline-primary:hover {
+  background-color: #009fe3;
+  border-color: #009fe3;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 159, 227, 0.3);
+}
+
+.opeluce-action-btn.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.opeluce-action-btn.btn-outline-danger:hover {
   background-color: #dc3545;
   border-color: #dc3545;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 .spinner-border {
