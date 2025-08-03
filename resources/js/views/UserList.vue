@@ -39,7 +39,6 @@
         <table class="table table-hover opeluce-table">
           <thead class="opeluce-table-header">
             <tr>
-              <th><i class="fas fa-hashtag me-2"></i>ID</th>
               <th><i class="fas fa-user me-2"></i>Nombre</th>
               <th><i class="fas fa-envelope me-2"></i>Email</th>
               <th><i class="fas fa-at me-2"></i>Usuario</th>
@@ -49,16 +48,8 @@
           </thead>
           <tbody>
             <tr v-for="user in users" :key="user.id" class="opeluce-table-row">
-              <td class="fw-bold">{{ user.id }}</td>
               <td>
-                <div class="d-flex align-items-center">
-                  <div class="opeluce-avatar me-3">
-                    <i class="fas fa-user"></i>
-                  </div>
-                  <div>
-                    <div class="fw-semibold">{{ user.name }}</div>
-                  </div>
-                </div>
+                <div class="fw-semibold">{{ user.name }}</div>
               </td>
               <td class="text-muted">{{ user.email }}</td>
               <td>
