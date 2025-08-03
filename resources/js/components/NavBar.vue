@@ -66,8 +66,15 @@ export default {
         await axios.post('/api/logout');
       } catch (error) {
         // Optionally handle errors
+        console.error('Logout error:', error);
       }
+      
+      // Clear authentication data
       localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      delete axios.defaults.headers.common['Authorization'];
+      
+      // Redirect to login
       window.location.href = '/login';
     },
     handleChangePassword() {

@@ -33,11 +33,12 @@ router.beforeEach((to, from, next) => {
     // Start the progress bar animation.
     NProgress.start();
 
-    // Retrieve the 'user' item from local storage.
+    // Retrieve the 'user' and 'auth_token' items from local storage.
     const storedUser = localStorage.getItem('user');
+    const authToken = localStorage.getItem('auth_token');
 
-    // Determine if the user is authenticated based on the presence of 'user' in local storage.
-    const isAuthenticated = !!storedUser;
+    // Determine if the user is authenticated based on the presence of both 'user' and 'auth_token' in local storage.
+    const isAuthenticated = !!(storedUser && authToken);
 
     // If the user is authenticated and trying to access the login page, redirect to the home page.
     if (isAuthenticated && to.path === '/login') {

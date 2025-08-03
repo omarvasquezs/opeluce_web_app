@@ -111,8 +111,14 @@ export default {
           username: this.username,
           password: this.password
         });
-        // Store user data in localStorage for persistence
+        
+        // Store user data and token in localStorage for persistence
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('auth_token', response.data.token);
+        
+        // Set the token for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
         // Redirect to home page
         window.location.href = '/';
       } catch (error) {
