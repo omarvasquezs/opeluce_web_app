@@ -35,6 +35,60 @@
 
     <!-- Users table -->
     <div v-else class="opeluce-card">
+      <!-- Filters Row -->
+      <div class="opeluce-filters p-3 border-bottom">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label opeluce-filter-label">Filtrar por Nombre</label>
+            <input 
+              v-model="filters.name" 
+              type="text" 
+              class="form-control opeluce-filter-input" 
+              placeholder="Buscar por nombre..."
+              @input="applyFilters"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label opeluce-filter-label">Filtrar por Email</label>
+            <input 
+              v-model="filters.email" 
+              type="text" 
+              class="form-control opeluce-filter-input" 
+              placeholder="Buscar por email..."
+              @input="applyFilters"
+            />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label opeluce-filter-label">Filtrar por Usuario</label>
+            <input 
+              v-model="filters.username" 
+              type="text" 
+              class="form-control opeluce-filter-input" 
+              placeholder="Buscar usuario..."
+              @input="applyFilters"
+            />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label opeluce-filter-label">Fecha de Creación</label>
+            <input 
+              v-model="filters.createdAt" 
+              type="date" 
+              class="form-control opeluce-filter-input" 
+              @change="applyFilters"
+            />
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button 
+              @click="clearFilters" 
+              class="btn btn-outline-secondary w-100"
+              title="Limpiar filtros"
+            >
+              <i class="fas fa-times me-2"></i>Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="table-responsive">
         <table class="table table-hover opeluce-table">
           <thead class="opeluce-table-header">
@@ -47,7 +101,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.id" class="opeluce-table-row">
+            <tr v-for="user in filteredUsers" :key="user.id" class="opeluce-table-row">
               <td>
                 <div class="fw-semibold">{{ user.name }}</div>
               </td>
@@ -83,12 +137,56 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const users = ref([]);
 const loading = ref(false);
 const error = ref('');
+
+// Filter reactive object
+const filters = ref({
+  name: '',
+  email: '',
+  username: '',
+  createdAt: ''
+});
+
+// Computed property for filtered users
+const filteredUsers = computed(() => {
+  let filtered = users.value;
+
+  // Filter by name
+  if (filters.value.name) {
+    filtered = filtered.filter(user => 
+      user.name.toLowerCase().includes(filters.value.name.toLowerCase())
+    );
+  }
+
+  // Filter by email
+  if (filters.value.email) {
+    filtered = filtered.filter(user => 
+      user.email.toLowerCase().includes(filters.value.email.toLowerCase())
+    );
+  }
+
+  // Filter by username
+  if (filters.value.username) {
+    filtered = filtered.filter(user => 
+      user.username.toLowerCase().includes(filters.value.username.toLowerCase())
+    );
+  }
+
+  // Filter by creation date
+  if (filters.value.createdAt) {
+    filtered = filtered.filter(user => {
+      const userDate = new Date(user.created_at).toISOString().split('T')[0];
+      return userDate === filters.value.createdAt;
+    });
+  }
+
+  return filtered;
+});
 
 async function loadUsers() {
   loading.value = true;
@@ -110,6 +208,20 @@ async function loadUsers() {
   } finally {
     loading.value = false;
   }
+}
+
+function applyFilters() {
+  // Filters are applied automatically through the computed property
+  console.log('Filters applied:', filters.value);
+}
+
+function clearFilters() {
+  filters.value = {
+    name: '',
+    email: '',
+    username: '',
+    createdAt: ''
+  };
 }
 
 async function deleteUser(id) {
@@ -271,5 +383,40 @@ onMounted(() => {
   border-radius: 8px;
   border: none;
   font-family: 'ProximaNovaSemibold', sans-serif;
+}
+
+.opeluce-filters {
+  background: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.opeluce-filter-label {
+  color: #626161;
+  font-weight: 600;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.opeluce-filter-input {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-family: 'ProximaNovaSemibold', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.opeluce-filter-input:focus {
+  border-color: #009fe3;
+  box-shadow: 0 0 0 0.15rem rgba(0, 159, 227, 0.15);
+  outline: none;
+}
+
+.opeluce-filter-input::placeholder {
+  color: #999;
+  font-size: 13px;
 }
 </style>
