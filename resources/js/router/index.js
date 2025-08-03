@@ -15,13 +15,39 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: Home },
-      { path: 'users', component: UserList },
-      { path: 'users/create', component: UserForm },
-      { path: 'users/:id/edit', component: UserForm, props: true },
+      { 
+        path: 'users', 
+        component: UserList,
+        meta: { requiresAdmin: true }
+      },
+      { 
+        path: 'users/create', 
+        component: UserForm,
+        meta: { requiresAdmin: true }
+      },
+      { 
+        path: 'users/:id/edit', 
+        component: UserForm, 
+        props: true,
+        meta: { requiresAdmin: true }
+      },
       // Admin routes (for backwards compatibility)
-      { path: 'admin/users', component: UserList },
-      { path: 'admin/users/create', component: UserForm },
-      { path: 'admin/users/:id/edit', component: UserForm, props: true },
+      { 
+        path: 'admin/users', 
+        component: UserList,
+        meta: { requiresAdmin: true }
+      },
+      { 
+        path: 'admin/users/create', 
+        component: UserForm,
+        meta: { requiresAdmin: true }
+      },
+      { 
+        path: 'admin/users/:id/edit', 
+        component: UserForm, 
+        props: true,
+        meta: { requiresAdmin: true }
+      },
     ],
   },
 ]
@@ -43,6 +69,17 @@ router.beforeEach((to, from, next) => {
 
     // Determine if the user is authenticated based on the presence of both 'user' and 'auth_token' in local storage.
     const isAuthenticated = !!(storedUser && authToken);
+    
+    // Get user role if authenticated
+    let userRole = false; // Default to non-admin
+    if (isAuthenticated && storedUser) {
+        try {
+            const userObj = JSON.parse(storedUser);
+            userRole = userObj.role || false; // role is boolean: true = admin, false = user
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+        }
+    }
 
     // If the user is authenticated and trying to access the login page, redirect to the home page.
     if (isAuthenticated && to.path === '/login') {
@@ -51,7 +88,13 @@ router.beforeEach((to, from, next) => {
     // If the user is not authenticated and trying to access any page other than the login page, redirect to the login page.
     else if (!isAuthenticated && to.path !== '/login') {
         next('/login');
-    } 
+    }
+    // Check if route requires admin access
+    else if (to.meta.requiresAdmin && !userRole) {
+        // User is authenticated but not admin, redirect to home
+        console.warn('Access denied: Admin role required');
+        next('/');
+    }
     // Otherwise, allow the navigation to proceed.
     else {
         next();

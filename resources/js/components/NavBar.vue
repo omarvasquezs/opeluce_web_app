@@ -9,7 +9,7 @@
       <div class="flex-grow-1 d-flex justify-content-center">
         <ul class="nav">
           <!-- Inicio removed, logo is now the home link -->
-          <li class="nav-item">
+          <li class="nav-item" v-if="isAdmin">
             <router-link class="nav-link opeluce-navbar-link" to="/users">
               <i class="fas fa-users me-2"></i>ADM. USUARIOS
             </router-link>
@@ -50,14 +50,22 @@ export default {
     return {
       baseUrl: window.location.origin,
       username: '',
+      isAdmin: false,
       menuOpen: false
     };
   },
   mounted() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      const userObj = JSON.parse(storedUser);
-      this.username = userObj.username;
+      try {
+        const userObj = JSON.parse(storedUser);
+        this.username = userObj.username;
+        this.isAdmin = userObj.role || false; // role is boolean: true = admin, false = user
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        this.username = 'Usuario';
+        this.isAdmin = false;
+      }
     }
   },
   methods: {

@@ -368,8 +368,16 @@ async function loadUsers() {
     if (err.response) {
       if (err.response.status === 401) {
         error.value = 'No autorizado. Por favor, inicie sesión nuevamente.';
+        // Redirect to login
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
       } else if (err.response.status === 403) {
-        error.value = 'No tiene permisos para ver los usuarios.';
+        error.value = 'Acceso denegado. No tiene permisos para ver los usuarios.';
+        // Redirect to home page
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
       }
     }
   } finally {

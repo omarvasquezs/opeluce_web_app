@@ -169,7 +169,19 @@ async function loadUser() {
       // Don't load password for security
     } catch (err) {
       console.error('Error loading user:', err);
-      error.value = 'Error al cargar el usuario.';
+      if (err.response && err.response.status === 403) {
+        error.value = 'Acceso denegado. No tiene permisos para editar usuarios.';
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else if (err.response && err.response.status === 401) {
+        error.value = 'No autorizado. Por favor, inicie sesión nuevamente.';
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+      } else {
+        error.value = 'Error al cargar el usuario.';
+      }
     } finally {
       loading.value = false;
     }
@@ -198,7 +210,17 @@ async function submitForm() {
     console.error('Error saving user:', e);
     
     if (e.response && e.response.data) {
-      if (e.response.data.errors) {
+      if (e.response.status === 403) {
+        error.value = 'Acceso denegado. No tiene permisos para realizar esta acción.';
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else if (e.response.status === 401) {
+        error.value = 'No autorizado. Por favor, inicie sesión nuevamente.';
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+      } else if (e.response.data.errors) {
         // Handle validation errors
         const errorMessages = Object.values(e.response.data.errors).flat();
         error.value = errorMessages.join(' ');

@@ -23,5 +23,5 @@ Route::get('/user', function (Request $request) {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// User management routes
-Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
+// User management routes - only accessible by admin users
+Route::apiResource('users', UserController::class)->middleware(['auth:sanctum', 'admin']);
