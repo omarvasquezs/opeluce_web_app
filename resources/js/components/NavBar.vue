@@ -94,7 +94,7 @@ export default {
   display: flex;
   align-items: center;
   font-weight: 600;
-  color: #444;
+  color: #626161;
   font-size: 17px;
   padding: 0.5rem 1.2rem;
   border-radius: 20px;
@@ -132,7 +132,7 @@ export default {
 .opeluce-user-action {
   background: none;
   border: none;
-  color: #1a3365;
+  color: #626161;
   font-family: 'ProximaNovaSemibold', sans-serif;
   font-size: 15px;
   padding: 0.6rem 1.1rem;
@@ -190,7 +190,7 @@ export default {
 }
 
 .opeluce-navbar-link {
-  color: #444;
+  color: #626161;
   font-size: 18px;
   font-weight: 400;
   margin: 0 1.2rem;
