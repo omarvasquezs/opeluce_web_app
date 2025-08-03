@@ -10,10 +10,14 @@
         <ul class="nav">
           <!-- Inicio removed, logo is now the home link -->
           <li class="nav-item">
-            <router-link class="nav-link opeluce-navbar-link" to="/users">ADM. USUARIOS</router-link>
+            <router-link class="nav-link opeluce-navbar-link" to="/users">
+              <i class="fas fa-users me-2"></i>ADM. USUARIOS
+            </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link opeluce-navbar-link" to="/devices">ADM. DISPOSITIVOS</router-link>
+            <router-link class="nav-link opeluce-navbar-link" to="/devices">
+              <i class="fas fa-laptop me-2"></i>ADM. DISPOSITIVOS
+            </router-link>
           </li>
         </ul>
       </div>
@@ -22,11 +26,15 @@
           <span class="opeluce-username">
             <i class="fa fa-user me-2" aria-hidden="true"></i>
             <span class="opeluce-username-text">{{ username }}</span>
-            <i class="bi bi-caret-down-fill ms-1"></i>
+            <i class="fas fa-caret-down ms-1"></i>
           </span>
           <div v-if="menuOpen" class="opeluce-user-submenu">
-            <button class="opeluce-user-action" @click="handleChangePassword">CAMBIAR CONTRASEÑA</button>
-            <button class="opeluce-user-action" @click="handleLogout">SALIR DEL SISTEMA</button>
+            <button class="opeluce-user-action" @click="handleChangePassword">
+              <i class="fas fa-key me-2"></i>CAMBIAR CONTRASEÑA
+            </button>
+            <button class="opeluce-user-action" @click="handleLogout">
+              <i class="fas fa-sign-out-alt me-2"></i>SALIR DEL SISTEMA
+            </button>
           </div>
         </div>
       </div>
