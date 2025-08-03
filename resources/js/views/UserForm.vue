@@ -71,6 +71,22 @@
               />
             </div>
             
+            <div class="col-md-6">
+              <label for="role" class="form-label opeluce-label">
+                <i class="fas fa-shield me-2"></i>Rol del Usuario
+              </label>
+              <select 
+                v-model="form.role" 
+                id="role" 
+                class="form-select opeluce-input"
+                required
+              >
+                <option value="">Seleccione un rol</option>
+                <option :value="false">Usuario Normal</option>
+                <option :value="true">Administrador</option>
+              </select>
+            </div>
+            
             <div v-if="error" class="col-12">
               <div class="alert alert-danger opeluce-alert" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -109,6 +125,7 @@ const form = reactive({
   username: '',
   email: '',
   password: '',
+  role: false,
 });
 
 const error = ref('');
@@ -125,6 +142,7 @@ async function loadUser() {
       form.name = user.name;
       form.username = user.username;
       form.email = user.email;
+      form.role = user.role;
       // Don't load password for security
     } catch (err) {
       console.error('Error loading user:', err);

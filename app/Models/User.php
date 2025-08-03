@@ -23,6 +23,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -45,6 +46,37 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if the user is an admin.
+     *
+     * @return bool
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === true;
+    }
+
+    /**
+     * Check if the user is a normal user.
+     *
+     * @return bool
+     */
+    public function isUser(): bool
+    {
+        return $this->role === false;
+    }
+
+    /**
+     * Get the role name as a string.
+     *
+     * @return string
+     */
+    public function getRoleName(): string
+    {
+        return $this->role ? 'Administrador' : 'Usuario';
     }
 }

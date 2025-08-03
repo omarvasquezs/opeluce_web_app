@@ -38,7 +38,7 @@
       <!-- Filters Row -->
       <div class="opeluce-filters p-3 border-bottom">
         <div class="row g-3">
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label class="form-label opeluce-filter-label">Filtrar por Nombre</label>
             <input 
               v-model="filters.name" 
@@ -69,6 +69,18 @@
             />
           </div>
           <div class="col-md-2">
+            <label class="form-label opeluce-filter-label">Filtrar por Rol</label>
+            <select 
+              v-model="filters.role" 
+              class="form-select opeluce-filter-input"
+              @change="applyFilters"
+            >
+              <option value="">Todos los roles</option>
+              <option value="admin">Administradores</option>
+              <option value="user">Usuarios</option>
+            </select>
+          </div>
+          <div class="col-md-2">
             <label class="form-label opeluce-filter-label">Fecha de Creación</label>
             <input 
               v-model="filters.createdAt" 
@@ -77,13 +89,13 @@
               @change="applyFilters"
             />
           </div>
-          <div class="col-md-2 d-flex align-items-end">
+          <div class="col-md-1 d-flex align-items-end">
             <button 
               @click="clearFilters" 
               class="btn btn-outline-secondary w-100"
               title="Limpiar filtros"
             >
-              <i class="fas fa-times me-2"></i>Limpiar
+              <i class="fas fa-times"></i>
             </button>
           </div>
         </div>
@@ -96,20 +108,21 @@
               <th><i class="fas fa-user me-2"></i>Nombre</th>
               <th><i class="fas fa-envelope me-2"></i>Email</th>
               <th><i class="fas fa-at me-2"></i>Usuario</th>
+              <th><i class="fas fa-shield me-2"></i>Rol</th>
               <th><i class="fas fa-calendar me-2"></i>Fecha de Creación</th>
               <th><i class="fas fa-cog me-2"></i>Acciones</th>
             </tr>
           </thead>
                     <tbody>
             <tr v-if="loading">
-              <td colspan="5" class="text-center py-4">
+              <td colspan="6" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Cargando...</span>
                 </div>
               </td>
             </tr>
             <tr v-else-if="paginatedUsers.length === 0">
-              <td colspan="5" class="text-center py-4 text-muted">
+              <td colspan="6" class="text-center py-4 text-muted">
                 <i class="fas fa-users fa-2x mb-2"></i>
                 <div>No hay usuarios para mostrar</div>
               </td>
@@ -118,6 +131,15 @@
               <td>{{ user.name }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.username }}</td>
+              <td>
+                <span 
+                  :class="['badge', user.role ? 'bg-danger' : 'bg-primary']"
+                  :title="user.role ? 'Usuario administrador' : 'Usuario normal'"
+                >
+                  <i :class="['fas', 'me-1', user.role ? 'fa-shield-alt' : 'fa-user']"></i>
+                  {{ user.role ? 'Admin' : 'Usuario' }}
+                </span>
+              </td>
               <td>{{ formatDate(user.created_at) }}</td>
               <td>
                 <div class="btn-group" role="group">
@@ -215,6 +237,7 @@ const filters = ref({
   name: '',
   email: '',
   username: '',
+  role: '',
   createdAt: ''
 });
 
@@ -245,6 +268,15 @@ const filteredUsers = computed(() => {
     filtered = filtered.filter(user => 
       user.username.toLowerCase().includes(filters.value.username.toLowerCase())
     );
+  }
+
+  // Filter by role
+  if (filters.value.role) {
+    if (filters.value.role === 'admin') {
+      filtered = filtered.filter(user => user.role === true);
+    } else if (filters.value.role === 'user') {
+      filtered = filtered.filter(user => user.role === false);
+    }
   }
 
   // Filter by creation date
@@ -354,6 +386,7 @@ function clearFilters() {
     name: '',
     email: '',
     username: '',
+    role: '',
     createdAt: ''
   };
   currentPage.value = 1;
