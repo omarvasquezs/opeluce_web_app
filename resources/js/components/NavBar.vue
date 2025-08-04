@@ -16,7 +16,7 @@
           </li>
           <li class="nav-item">
             <router-link class="nav-link opeluce-navbar-link" to="/devices">
-              <i class="fas fa-laptop me-2"></i>ADM. DISPOSITIVOS
+              <i class="fas fa-laptop me-2"></i>REGISTROS OPTOMÉTRICOS
             </router-link>
           </li>
         </ul>
