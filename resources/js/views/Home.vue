@@ -2,7 +2,7 @@
   <div class="opeluce-dashboard">
     <!-- Hero Section -->
     <div class="opeluce-hero-section">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row align-items-center">
           <div class="col-lg-8">
             <div class="opeluce-hero-content">
@@ -29,7 +29,7 @@
 
     <!-- Statistics Section -->
     <div class="opeluce-stats-section">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row g-4">
           <!-- Total Users Card -->
           <div class="col-md-6 col-lg-3">
@@ -88,7 +88,7 @@
 
     <!-- Quick Actions Section -->
     <div class="opeluce-actions-section">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row">
           <div class="col-12">
             <h2 class="opeluce-section-title">
@@ -150,7 +150,7 @@
 
     <!-- System Information Section -->
     <div class="opeluce-info-section">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row">
           <div class="col-lg-8">
             <div class="opeluce-info-card">
@@ -252,15 +252,19 @@ onMounted(() => {
 <style scoped>
 .opeluce-dashboard {
   min-height: 100vh;
+  width: 100%;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  margin: 0;
+  padding: 0;
 }
 
 /* Hero Section */
 .opeluce-hero-section {
-  background: linear-gradient(135deg, #009fe3 0%, #007bb5 100%);
-  color: white;
-  padding: 4rem 0;
+  background: transparent;
+  color: #2c3e50;
+  padding: 4rem 2rem;
   margin-bottom: 3rem;
+  border-bottom: 2px solid #eaeaea;
 }
 
 .opeluce-hero-title {
@@ -268,18 +272,19 @@ onMounted(() => {
   font-weight: 700;
   margin-bottom: 1rem;
   font-family: 'ProximaNovaSemibold', sans-serif;
+  color: #2c3e50;
 }
 
 .opeluce-hero-subtitle {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  opacity: 0.9;
+  color: #009fe3;
 }
 
 .opeluce-hero-description {
   font-size: 1.1rem;
-  opacity: 0.8;
+  color: #6c757d;
   line-height: 1.6;
 }
 
@@ -287,13 +292,14 @@ onMounted(() => {
   width: 200px;
   height: 200px;
   object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 4px solid #009fe3;
+  box-shadow: 0 8px 32px rgba(0, 159, 227, 0.2);
 }
 
 /* Statistics Section */
 .opeluce-stats-section {
   margin-bottom: 3rem;
+  padding: 0 2rem;
 }
 
 .opeluce-stat-card {
@@ -344,6 +350,7 @@ onMounted(() => {
 /* Actions Section */
 .opeluce-actions-section {
   margin-bottom: 3rem;
+  padding: 0 2rem;
 }
 
 .opeluce-section-title {
@@ -412,6 +419,7 @@ onMounted(() => {
 /* Info Section */
 .opeluce-info-section {
   margin-bottom: 2rem;
+  padding: 0 2rem 2rem;
 }
 
 .opeluce-info-card {
