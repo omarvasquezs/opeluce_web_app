@@ -24,7 +24,16 @@ export default {
   width: 100vw;
   z-index: 100;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  /* Add a consistent height for better layout calculations */
+  height: 70px;
+  display: flex;
+  align-items: center;
 }
+
+.opeluce-footer .container {
+  margin: auto;
+}
+
 .opeluce-footer-logo {
   height: 40px;
   width: auto;
@@ -35,5 +44,17 @@ export default {
   color: #444;
   font-size: 15px;
   font-family: 'ProximaNovaSemibold', sans-serif;
+}
+
+/* Responsive footer height */
+@media (max-width: 768px) {
+  .opeluce-footer {
+    height: 80px;
+  }
+  
+  .footer-text {
+    font-size: 13px;
+    line-height: 1.3;
+  }
 }
 </style>
