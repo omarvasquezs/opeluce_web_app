@@ -7,6 +7,7 @@ import MainLayout from '@/components/MainLayout.vue'
 import Home from '@/views/Home.vue'
 import UserList from '@/views/UserList.vue'
 import UserForm from '@/views/UserForm.vue'
+import ChangePassword from '@/views/ChangePassword.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -16,6 +17,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: Home },
+      { path: 'change-password', component: ChangePassword },
       { 
         path: 'users', 
         component: UserList,

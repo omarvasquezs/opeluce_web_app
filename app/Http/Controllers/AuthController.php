@@ -29,4 +29,42 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out']);
     }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña actual no es correcta.',
+                'errors' => [
+                    'current_password' => ['La contraseña actual no es correcta.']
+                ]
+            ], 422);
+        }
+
+        // Check if new password is different from current
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'message' => 'La nueva contraseña debe ser diferente a la actual.',
+                'errors' => [
+                    'new_password' => ['La nueva contraseña debe ser diferente a la actual.']
+                ]
+            ], 422);
+        }
+
+        // Update password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña actualizada exitosamente.'
+        ]);
+    }
 }
