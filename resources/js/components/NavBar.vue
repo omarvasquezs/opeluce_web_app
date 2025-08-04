@@ -44,28 +44,21 @@
 
 <script>
 import axios from 'axios';
+import { userStore } from '@/stores/userStore.js';
 
 export default {
   data() {
     return {
       baseUrl: window.location.origin,
-      username: '',
-      isAdmin: false,
       menuOpen: false
     };
   },
-  mounted() {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userObj = JSON.parse(storedUser);
-        this.username = userObj.username;
-        this.isAdmin = userObj.role || false; // role is boolean: true = admin, false = user
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        this.username = 'Usuario';
-        this.isAdmin = false;
-      }
+  computed: {
+    username() {
+      return userStore.user?.username || 'Usuario';
+    },
+    isAdmin() {
+      return userStore.isAdmin;
     }
   },
   methods: {
@@ -77,9 +70,8 @@ export default {
         console.error('Logout error:', error);
       }
       
-      // Clear authentication data
-      localStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
+      // Clear authentication data using the store
+      userStore.clearUser();
       delete axios.defaults.headers.common['Authorization'];
       
       // Redirect to login
@@ -87,7 +79,15 @@ export default {
     },
     handleChangePassword() {
       this.$router.push('/change-password');
+    },
+    async refreshUserData() {
+      await userStore.refreshUser();
     }
+  },
+  // Auto-refresh user data when component mounts
+  mounted() {
+    // Refresh user data from server to ensure it's up to date
+    userStore.refreshUser();
   }
 };
 </script>

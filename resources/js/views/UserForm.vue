@@ -139,6 +139,7 @@
 import { reactive, ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { userStore } from '@/stores/userStore.js';
 
 const router = useRouter();
 const props = defineProps(['id']);
@@ -203,6 +204,17 @@ async function submitForm() {
       await axios.put(`/api/users/${props.id}`, formData);
     } else {
       await axios.post('/api/users', formData);
+    }
+    
+    // If we just updated the current user, refresh their data in the store
+    if (isEdit.value && userStore.user && userStore.user.id == props.id) {
+      // Update the user store with the new data
+      userStore.updateUser({
+        name: formData.name,
+        username: formData.username,
+        email: formData.email,
+        role: formData.role
+      });
     }
     
     router.push('/users');

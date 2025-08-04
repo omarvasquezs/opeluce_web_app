@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
+import { userStore } from '@/stores/userStore.js';
 import Login from '@/components/LoginForm.vue'
 import MainLayout from '@/components/MainLayout.vue'
 import Home from '@/views/Home.vue'
@@ -63,23 +64,9 @@ router.beforeEach((to, from, next) => {
     // Start the progress bar animation.
     NProgress.start();
 
-    // Retrieve the 'user' and 'auth_token' items from local storage.
-    const storedUser = localStorage.getItem('user');
-    const authToken = localStorage.getItem('auth_token');
-
-    // Determine if the user is authenticated based on the presence of both 'user' and 'auth_token' in local storage.
-    const isAuthenticated = !!(storedUser && authToken);
-    
-    // Get user role if authenticated
-    let userRole = false; // Default to non-admin
-    if (isAuthenticated && storedUser) {
-        try {
-            const userObj = JSON.parse(storedUser);
-            userRole = userObj.role || false; // role is boolean: true = admin, false = user
-        } catch (error) {
-            console.error('Error parsing user data:', error);
-        }
-    }
+    // Get authentication status from user store
+    const isAuthenticated = userStore.isAuthenticated;
+    const isAdmin = userStore.isAdmin;
 
     // If the user is authenticated and trying to access the login page, redirect to the home page.
     if (isAuthenticated && to.path === '/login') {
@@ -90,7 +77,7 @@ router.beforeEach((to, from, next) => {
         next('/login');
     }
     // Check if route requires admin access
-    else if (to.meta.requiresAdmin && !userRole) {
+    else if (to.meta.requiresAdmin && !isAdmin) {
         // User is authenticated but not admin, redirect to home
         console.warn('Access denied: Admin role required');
         next('/');

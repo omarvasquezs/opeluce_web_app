@@ -88,6 +88,7 @@
 
 <script>
 import axios from 'axios';
+import { userStore } from '@/stores/userStore.js';
 
 const baseUrl = window.location.origin;
 
@@ -112,9 +113,8 @@ export default {
           password: this.password
         });
         
-        // Store user data and token in localStorage for persistence
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('auth_token', response.data.token);
+        // Store user data and token using the user store
+        userStore.setUser(response.data.user, response.data.token);
         
         // Set the token for future requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
