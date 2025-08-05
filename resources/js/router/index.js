@@ -8,6 +8,7 @@ import Home from '@/views/Home.vue'
 import UserList from '@/views/UserList.vue'
 import UserForm from '@/views/UserForm.vue'
 import ChangePassword from '@/views/ChangePassword.vue'
+import RegistrosOptometricos from '@/views/RegistrosOptometricos.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -18,6 +19,7 @@ const routes = [
     children: [
       { path: '', component: Home },
       { path: 'change-password', component: ChangePassword },
+      { path: 'registros-optometricos', component: RegistrosOptometricos },
       { 
         path: 'users', 
         component: UserList,

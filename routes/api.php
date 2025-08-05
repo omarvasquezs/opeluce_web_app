@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\HistoriaClinicaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,3 +27,9 @@ Route::post('/change-password', [AuthController::class, 'changePassword'])->midd
 
 // User management routes - only accessible by admin users
 Route::apiResource('users', UserController::class)->middleware(['auth:sanctum', 'admin']);
+
+// Historia Clinica routes - accessible by authenticated users
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('historia-clinica', HistoriaClinicaController::class);
+    Route::get('search-patients', [HistoriaClinicaController::class, 'searchPatients']);
+});

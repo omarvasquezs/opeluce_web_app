@@ -15,7 +15,7 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link opeluce-navbar-link" to="/devices">
+            <router-link class="nav-link opeluce-navbar-link" to="/registros-optometricos">
               <i class="fas fa-laptop me-2"></i>REGISTROS OPTOMÉTRICOS
             </router-link>
           </li>

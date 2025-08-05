@@ -129,6 +129,22 @@
             </div>
           </div>
 
+          <!-- Optometric Records Card -->
+          <div class="col-md-6 col-lg-4">
+            <div class="opeluce-action-card">
+              <div class="opeluce-action-icon">
+                <i class="fas fa-eye-dropper"></i>
+              </div>
+              <h4 class="opeluce-action-title">Registros Optométricos</h4>
+              <p class="opeluce-action-description">
+                Gestiona historia clínica, agudeza visual y refracción de pacientes.
+              </p>
+              <router-link to="/registros-optometricos" class="btn btn-success opeluce-action-btn">
+                <i class="fas fa-clipboard-list me-2"></i>Nuevo Registro
+              </router-link>
+            </div>
+          </div>
+
           <!-- Profile Settings Card -->
           <div class="col-md-6 col-lg-4">
             <div class="opeluce-action-card">
