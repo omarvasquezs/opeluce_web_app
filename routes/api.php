@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HistoriaClinicaController;
+use App\Http\Controllers\LensometerController;
+use App\Http\Controllers\RefractionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,4 +34,13 @@ Route::apiResource('users', UserController::class)->middleware(['auth:sanctum', 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('historia-clinica', HistoriaClinicaController::class);
     Route::get('search-patients', [HistoriaClinicaController::class, 'searchPatients']);
+});
+
+// Test routes without authentication middleware for debugging
+Route::get('lensometer-records', [LensometerController::class, 'getRecords']);
+Route::get('refraction-records', [RefractionController::class, 'getRecords']);
+
+// Simple test route
+Route::get('test', function() {
+    return response()->json(['status' => 'API is working', 'timestamp' => now()]);
 });

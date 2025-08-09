@@ -252,7 +252,14 @@
                       </select>
                       <i class="fas fa-chevron-down select-caret"></i>
                     </div>
-                    <button class="btn btn-info ms-2">Consultar Registros</button>
+                    <button 
+                      @click="consultarRegistros" 
+                      class="btn btn-info ms-2"
+                      :disabled="!selectedCategory || isLoadingRecords"
+                    >
+                      <i v-if="isLoadingRecords" class="fas fa-spinner fa-spin me-2"></i>
+                      Consultar Registros
+                    </button>
                   </div>
                 </div>
               </div>
@@ -695,6 +702,142 @@
         </div>
       </div>
     </div>
+
+    <!-- Records Selection Modal -->
+    <div v-if="showRecordsModal" class="modal-overlay" @click="closeRecordsModal">
+      <div class="modal-dialog classic-records-modal" @click.stop>
+        <div class="modal-content classic-modal">
+          <div class="modal-header classic-header">
+            <h5 class="modal-title classic-title">
+              <i v-if="selectedCategory === 'lensometria'" class="fas fa-microscope me-2"></i>
+              <i v-else class="fas fa-eye me-2"></i>
+              {{ selectedCategory === 'lensometria' ? 'Resultados de Lensómetro' : 'Resultados Auto Kerato-refractómetro' }}
+            </h5>
+            <button @click="closeRecordsModal" class="classic-close-btn">×</button>
+          </div>
+          <div class="modal-body classic-body">
+            <div v-if="isLoadingRecords" class="loading-container">
+              <div class="spinner"></div>
+              <p>Cargando registros...</p>
+            </div>
+            <div v-else-if="availableRecords.length === 0" class="no-records">
+              <p>No se encontraron registros</p>
+            </div>
+            <div v-else class="records-container">
+              <!-- Lensometer Records Table -->
+              <table v-if="selectedCategory === 'lensometria'" class="classic-table">
+                <thead>
+                  <tr>
+                    <th>serial_id</th>
+                    <th>exam_id</th>
+                    <th>Modelo</th>
+                    <th>Creado</th>
+                    <th>Medido</th>
+                    <th>ESF OD</th>
+                    <th>CIL OD</th>
+                    <th>EJE OD</th>
+                    <th>ADD OD</th>
+                    <th>ESF OI</th>
+                    <th>CIL OI</th>
+                    <th>EJE OI</th>
+                    <th>ADD OI</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="record in availableRecords" :key="record.id" class="classic-row">
+                    <td>{{ record.serial_id || record.id }}</td>
+                    <td>{{ record.exam_id || '-1' }}</td>
+                    <td>{{ record.model || 'HUVITZ_L' }}</td>
+                    <td>{{ formatDateTime(record.created_date || record.examination_date) }}</td>
+                    <td>{{ formatDateTime(record.measured_date || record.examination_date) }}</td>
+                    <td>{{ record.od?.esf || '+0.00' }}</td>
+                    <td>{{ record.od?.cil || '+0.00' }}</td>
+                    <td>{{ record.od?.eje || '000' }}</td>
+                    <td>{{ record.od?.add || '' }}</td>
+                    <td>{{ record.oi?.esf || '+0.00' }}</td>
+                    <td>{{ record.oi?.cil || '+0.00' }}</td>
+                    <td>{{ record.oi?.eje || '000' }}</td>
+                    <td>{{ record.oi?.add || '' }}</td>
+                    <td class="action-cell">
+                      <button 
+                        @click="selectRecord(record, 1)" 
+                        class="classic-btn primary"
+                      >
+                        Usar para Lensometría 1
+                      </button>
+                      <button 
+                        @click="selectRecord(record, 2)" 
+                        class="classic-btn secondary"
+                      >
+                        Usar para Lensometría 2
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Auto Kerato-Refractometer Records Table -->
+              <table v-else class="classic-table">
+                <thead>
+                  <tr>
+                    <th>Archivo</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>ESF OD</th>
+                    <th>CIL OD</th>
+                    <th>EJE OD</th>
+                    <th>ESF OI</th>
+                    <th>CIL OI</th>
+                    <th>EJE OI</th>
+                    <th>K1 OD</th>
+                    <th>K1 Axis OD</th>
+                    <th>K2 OD</th>
+                    <th>K2 Axis OD</th>
+                    <th>K1 OI</th>
+                    <th>K1 Axis OI</th>
+                    <th>K2 OI</th>
+                    <th>K2 Axis OI</th>
+                    <th>DIP</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="record in availableRecords" :key="record.id" class="classic-row">
+                    <td>{{ record.filename || record.id }}</td>
+                    <td>{{ formatDate(record.examination_date) }}</td>
+                    <td>{{ record.examination_time || '23:18:01' }}</td>
+                    <td>{{ record.od?.esf || '0.50' }}</td>
+                    <td>{{ record.od?.cil || '0.0' }}</td>
+                    <td>{{ record.od?.eje || '0' }}</td>
+                    <td>{{ record.oi?.esf || '0.50' }}</td>
+                    <td>{{ record.oi?.cil || '-0.25' }}</td>
+                    <td>{{ record.oi?.eje || '25' }}</td>
+                    <td>{{ record.keratometry?.od?.k1 || '41.75' }}</td>
+                    <td>{{ record.keratometry?.od?.k1_axis || '170' }}</td>
+                    <td>{{ record.keratometry?.od?.k2 || '42.25' }}</td>
+                    <td>{{ record.keratometry?.od?.k2_axis || '80' }}</td>
+                    <td>{{ record.keratometry?.oi?.k1 || '42.00' }}</td>
+                    <td>{{ record.keratometry?.oi?.k1_axis || '15' }}</td>
+                    <td>{{ record.keratometry?.oi?.k2 || '42.75' }}</td>
+                    <td>{{ record.keratometry?.oi?.k2_axis || '105' }}</td>
+                    <td>{{ record.dip || '65.50' }}</td>
+                    <td class="action-cell">
+                      <button 
+                        @click="selectRecord(record)" 
+                        class="classic-btn primary"
+                      >
+                        Usar registro seleccionado
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -782,6 +925,11 @@ const totalPages = ref(1)
 const totalRecords = ref(0)
 const perPage = ref(20)
 
+// Records consultation
+const isLoadingRecords = ref(false)
+const availableRecords = ref([])
+const showRecordsModal = ref(false)
+
 // Computed properties
 const canProceedToStep2 = computed(() => {
   return historiaClinica.value.paciente && historiaClinica.value.dni
@@ -833,6 +981,32 @@ function formatDate(dateString) {
   const year = date.getFullYear()
   
   return `${day}/${month}/${year}`
+}
+
+// Utility function to format date and time
+function formatDateTime(dateString) {
+  if (!dateString) return ''
+  
+  let date
+  if (dateString.includes('T')) {
+    date = new Date(dateString)
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    date = new Date(dateString + 'T00:00:00')
+  } else {
+    date = new Date(dateString)
+  }
+  
+  if (isNaN(date.getTime())) return dateString
+  
+  // Format as YYYY-MM-DD HH:mm:ss
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  const seconds = date.getSeconds().toString().padStart(2, '0')
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 // Utility function to format dates for form inputs (YYYY-MM-DD)
@@ -910,6 +1084,123 @@ async function nextPage() {
   if (currentPage.value < totalPages.value) {
     await loadPatients(currentPage.value + 1)
   }
+}
+
+// Records consultation methods
+async function consultarRegistros() {
+  if (!selectedCategory.value) return
+  
+  isLoadingRecords.value = true
+  availableRecords.value = []
+  
+  try {
+    let response
+    
+    console.log('Base URL:', window.axios.defaults.baseURL)
+    
+    if (selectedCategory.value === 'lensometria') {
+      // Query PostgreSQL lensmeterresulttbl table - get all available records
+      console.log('Making request to:', `${window.axios.defaults.baseURL}/api/lensometer-records`)
+      response = await axios.get('/api/lensometer-records', {
+        params: {
+          // Don't filter by patient_id or date - show all available records
+          limit: 100 // Limit to prevent too many records
+        }
+      })
+    } else if (selectedCategory.value === 'refraccion') {
+      // Query XML files from shared folder \\127.0.0.1\kr - get all available records
+      console.log('Making request to:', `${window.axios.defaults.baseURL}/api/refraction-records`)
+      response = await axios.get('/api/refraction-records', {
+        params: {
+          // Don't filter by patient_id or date - show all available records
+          limit: 100 // Limit to prevent too many records
+        }
+      })
+    }
+    
+    if (response && response.data) {
+      availableRecords.value = response.data
+      
+      // Always show modal regardless of number of records
+      showRecordsModal.value = true
+    }
+  } catch (error) {
+    console.error(`Error loading ${selectedCategory.value} records:`, error)
+    console.error('Request URL:', error.config?.url)
+    console.error('Base URL:', error.config?.baseURL)
+    alert(`Error al consultar registros de ${selectedCategory.value}. Por favor, verifique la conexión.`)
+  } finally {
+    isLoadingRecords.value = false
+  }
+}
+
+function closeRecordsModal() {
+  showRecordsModal.value = false
+}
+
+function selectRecord(record, lensometryNumber = null) {
+  if (selectedCategory.value === 'lensometria') {
+    loadLensometerData(record, lensometryNumber)
+  } else if (selectedCategory.value === 'refraccion') {
+    loadRefractionData(record)
+  }
+  closeRecordsModal()
+}
+
+function loadLensometerData(record, lensometryNumber) {
+  const targetLensometry = lensometryNumber === 2 ? lensometria2 : lensometria1
+  
+  // Load data into the specified lensometry section
+  if (record.od) {
+    targetLensometry.value.od.esf = record.od.esf || ''
+    targetLensometry.value.od.cil = record.od.cil || ''
+    targetLensometry.value.od.eje = record.od.eje || ''
+    targetLensometry.value.od.add = record.od.add || ''
+  }
+  
+  if (record.oi) {
+    targetLensometry.value.oi.esf = record.oi.esf || ''
+    targetLensometry.value.oi.cil = record.oi.cil || ''
+    targetLensometry.value.oi.eje = record.oi.eje || ''
+    targetLensometry.value.oi.add = record.oi.add || ''
+  }
+  
+  targetLensometry.value.tipoLente = record.lens_type || ''
+  
+  const lensometryName = lensometryNumber === 2 ? 'Lensometría 2' : 'Lensometría 1'
+  alert(`Datos cargados exitosamente en ${lensometryName}.`)
+}
+
+function loadRefractionData(record) {
+  // Load data into refraccionAutomatica
+  if (record.od) {
+    refraccionAutomatica.value.od.esf = record.od.esf || ''
+    refraccionAutomatica.value.od.cil = record.od.cil || ''
+    refraccionAutomatica.value.od.eje = record.od.eje || ''
+  }
+  
+  if (record.oi) {
+    refraccionAutomatica.value.oi.esf = record.oi.esf || ''
+    refraccionAutomatica.value.oi.cil = record.oi.cil || ''
+    refraccionAutomatica.value.oi.eje = record.oi.eje || ''
+  }
+  
+  refraccionAutomatica.value.dip = record.dip || ''
+  
+  // Also load keratometry data if available
+  if (record.keratometry) {
+    if (record.keratometry.od) {
+      queratometria.value.od.valor1 = record.keratometry.od.k1 || ''
+      queratometria.value.od.cil1 = record.keratometry.od.cil || ''
+    }
+    
+    if (record.keratometry.oi) {
+      queratometria.value.oi.valor1 = record.keratometry.oi.k1 || ''
+      queratometria.value.oi.cil1 = record.keratometry.oi.cil || ''
+    }
+  }
+  
+  alert('Datos de refracción automática cargados exitosamente.')
 }
 
 // Methods
@@ -1705,6 +1996,240 @@ onMounted(() => {
   }
   
   .form-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Classic Records Modal Styles - Match Java Application */
+.classic-records-modal {
+  max-width: 90%;
+  width: 1200px;
+}
+
+.classic-modal {
+  border: 2px solid #333;
+  border-radius: 0;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.classic-header {
+  background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
+  border-bottom: 1px solid #999;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0;
+}
+
+.classic-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.classic-close-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.classic-close-btn:hover {
+  color: #000;
+  background: #e0e0e0;
+}
+
+.classic-body {
+  padding: 8px;
+  background: white;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.records-container {
+  overflow: auto;
+  max-height: 60vh;
+}
+
+.classic-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: white;
+}
+
+.classic-table th {
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.classic-table td {
+  border: 1px solid #ddd;
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 11px;
+  white-space: nowrap;
+  background: white;
+}
+
+.classic-row:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.classic-row:hover {
+  background: #e6f3ff !important;
+}
+
+.action-cell {
+  padding: 2px !important;
+}
+
+.classic-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+  margin: 1px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.classic-btn.primary {
+  background: linear-gradient(to bottom, #e8f4fd, #b6d7f0);
+  color: #0066cc;
+  border-color: #7eb4ea;
+}
+
+.classic-btn.primary:hover {
+  background: linear-gradient(to bottom, #d0e8fc, #9ac7ed);
+  border-color: #5094d4;
+}
+
+.classic-btn.secondary {
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  color: #333;
+  border-color: #ccc;
+}
+
+.classic-btn.secondary:hover {
+  background: linear-gradient(to bottom, #f0f0f0, #d8d8d8);
+  border-color: #999;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0066cc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-records {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 13px;
+}
+
+/* Override any conflicting Bootstrap styles */
+.classic-records-modal .modal-content {
+  border: 2px solid #333 !important;
+  border-radius: 0 !important;
+}
+
+.classic-records-modal .table {
+  margin: 0 !important;
+}
+
+.classic-records-modal .btn {
+  all: unset;
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  margin: 1px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: center;
+  background: linear-gradient(to bottom, #e8f4fd, #b6d7f0);
+  color: #0066cc;
+  border-color: #7eb4ea;
+}
+
+.classic-records-modal .btn:hover {
+  background: linear-gradient(to bottom, #d0e8fc, #9ac7ed);
+  border-color: #5094d4;
+}
+
+/* Loading state for Consultar Registros button */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Category selector enhancement */
+.category-selector .form-select:disabled {
+  background-color: rgba(255, 255, 255, 0.1);
+  opacity: 0.7;
+}
+
+/* Header controls responsive improvements */
+@media (max-width: 992px) {
+  .header-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .category-selector {
+    width: 100%;
+  }
+  
+  .category-selector .form-select {
     width: 100%;
   }
 }

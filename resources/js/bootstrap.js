@@ -1,7 +1,22 @@
 import axios from 'axios';
 window.axios = axios;
 
+// Set base URL for API requests
+// Use DDEV URL when in development mode, otherwise use current origin
+const isDevelopment = import.meta.env.DEV;
+const ddevUrl = 'https://opeluce.ddev.site';
+
+if (isDevelopment && window.location.hostname === 'localhost') {
+    // Running in Vite dev server, use DDEV URL for API calls
+    window.axios.defaults.baseURL = ddevUrl;
+    window.axios.defaults.withCredentials = true; // Include cookies for CORS
+} else {
+    // Running in production or served by Laravel, use current origin
+    window.axios.defaults.baseURL = window.location.origin;
+}
+
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.headers.common['Accept'] = 'application/json';
 
 // Set CSRF token header from meta tag
 const csrfToken = document.querySelector('meta[name="csrf-token"]');
