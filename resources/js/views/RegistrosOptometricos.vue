@@ -204,12 +204,9 @@
 
                 <!-- Action Buttons -->
                 <div class="form-actions">
-                  <button class="btn btn-secondary btn-lg">
-                    CERRAR
-                  </button>
                   <button 
                     @click="revisarAgudezaVisual" 
-                    class="btn btn-primary btn-lg ms-3"
+                    class="btn btn-primary btn-lg"
                     :disabled="!canProceedToStep2"
                   >
                     <i class="fas fa-arrow-right me-2"></i>
@@ -1191,12 +1188,18 @@ function loadRefractionData(record) {
   if (record.keratometry) {
     if (record.keratometry.od) {
       queratometria.value.od.valor1 = record.keratometry.od.k1 || ''
-      queratometria.value.od.cil1 = record.keratometry.od.cil || ''
+      queratometria.value.od.cil1 = record.keratometry.od.k2 || ''
+      // Also populate the axis values if your form supports them
+      // queratometria.value.od.axis1 = record.keratometry.od.k1_axis || ''
+      // queratometria.value.od.axis2 = record.keratometry.od.k2_axis || ''
     }
     
     if (record.keratometry.oi) {
       queratometria.value.oi.valor1 = record.keratometry.oi.k1 || ''
-      queratometria.value.oi.cil1 = record.keratometry.oi.cil || ''
+      queratometria.value.oi.cil1 = record.keratometry.oi.k2 || ''
+      // Also populate the axis values if your form supports them
+      // queratometria.value.oi.axis1 = record.keratometry.oi.k1_axis || ''
+      // queratometria.value.oi.axis2 = record.keratometry.oi.k2_axis || ''
     }
   }
   

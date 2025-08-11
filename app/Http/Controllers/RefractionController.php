@@ -60,6 +60,38 @@ class RefractionController extends Controller
                                 'k2_axis' => '105',
                             ],
                         ],
+                    ],
+                    [
+                        'id' => 'mock-2',
+                        'filename' => 'M-Serial7_2025-07-25_23-19-45.xml',
+                        'examination_date' => '2025-07-25',
+                        'examination_time' => '23:19:45',
+                        'patient_id' => '',
+                        'od' => [
+                            'esf' => '0.75',
+                            'cil' => '-0.25',
+                            'eje' => '170',
+                        ],
+                        'oi' => [
+                            'esf' => '0.50',
+                            'cil' => '-0.25',
+                            'eje' => '175',
+                        ],
+                        'dip' => '65.00',
+                        'keratometry' => [
+                            'od' => [
+                                'k1' => '42.00',
+                                'k1_axis' => '170',
+                                'k2' => '42.75',
+                                'k2_axis' => '80',
+                            ],
+                            'oi' => [
+                                'k1' => '42.25',
+                                'k1_axis' => '10',
+                                'k2' => '43.25',
+                                'k2_axis' => '100',
+                            ],
+                        ],
                     ]
                 ]);
             }
