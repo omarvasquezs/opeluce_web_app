@@ -32,6 +32,9 @@
             <button class="opeluce-user-action" @click="handleChangePassword">
               <i class="fas fa-key me-2"></i>CAMBIAR CONTRASEÑA
             </button>
+            <button class="opeluce-user-action" @click="gotoDeviceSettings">
+              <i class="fas fa-cogs me-2"></i>CONFIGURACIÓN DISPOSITIVOS
+            </button>
             <button class="opeluce-user-action" @click="handleLogout">
               <i class="fas fa-sign-out-alt me-2"></i>SALIR DEL SISTEMA
             </button>
@@ -79,6 +82,9 @@ export default {
     },
     handleChangePassword() {
       this.$router.push('/change-password');
+    },
+    gotoDeviceSettings() {
+      this.$router.push('/configuracion-dispositivos');
     },
     async refreshUserData() {
       await userStore.refreshUser();

@@ -9,6 +9,7 @@ import UserList from '@/views/UserList.vue'
 import UserForm from '@/views/UserForm.vue'
 import ChangePassword from '@/views/ChangePassword.vue'
 import RegistrosOptometricos from '@/views/RegistrosOptometricos.vue'
+import DeviceIntegrationSettings from '@/views/DeviceIntegrationSettings.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -20,6 +21,7 @@ const routes = [
       { path: '', component: Home },
       { path: 'change-password', component: ChangePassword },
       { path: 'registros-optometricos', component: RegistrosOptometricos },
+  { path: 'configuracion-dispositivos', component: DeviceIntegrationSettings },
       { 
         path: 'users', 
         component: UserList,

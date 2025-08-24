@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\LensometerSetting;
 
 class LensometerController extends Controller
 {
@@ -15,10 +16,38 @@ class LensometerController extends Controller
     {
         try {
             $limit = $request->input('limit', 100);
+
+            // Load settings
+            $setting = LensometerSetting::where('enabled', true)->orderBy('id')->first();
+            if (!$setting) {
+                return response()->json([]);
+            }
+            $allowMock = (bool)($setting->options['allow_mock'] ?? false);
             
             // Try to connect to the lensometer database
             try {
-                $query = DB::connection('lensometer_pgsql')->table('lensmeterresulttbl');
+                // Use dynamic connection override if settings specify host/database etc.
+                // We'll build a temporary connection array when custom host provided.
+                if ($setting->host || $setting->database) {
+                    $config = config('database.connections.lensometer_pgsql');
+                    $config['host'] = $setting->host ?: $config['host'];
+                    if ($setting->port) $config['port'] = $setting->port;
+                    $config['database'] = $setting->database ?: $config['database'];
+                    $config['username'] = $setting->username ?: $config['username'];
+                    if ($setting->password_encrypted) {
+                        // For now treat stored value as plain (future: decrypt)
+                        $config['password'] = $setting->password_encrypted;
+                    }
+                    // Create runtime connection name
+                    $runtime = 'lensometer_runtime';
+                    config(["database.connections.$runtime" => $config]);
+                    $connectionName = $runtime;
+                } else {
+                    $connectionName = 'lensometer_pgsql';
+                }
+
+                $table = $setting->table_name ?: 'lensmeterresulttbl';
+                $query = DB::connection($connectionName)->table($table);
                 
                 // Get records ordered by most recent first, with limit to prevent too many records
                 $records = $query->orderBy('examination_date', 'desc')
@@ -59,8 +88,10 @@ class LensometerController extends Controller
                 
             } catch (\Exception $dbException) {
                 Log::warning('Lensometer database not available: ' . $dbException->getMessage());
-                
-                // Return mock data for testing when database is not available
+                if (!$allowMock) {
+                    return response()->json([]);
+                }
+                // Return mock data for testing when database is not available (allowed)
                 return response()->json([
                     [
                         'id' => 16,

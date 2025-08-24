@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\HistoriaClinicaController;
 use App\Http\Controllers\LensometerController;
 use App\Http\Controllers\RefractionController;
+use App\Http\Controllers\DeviceIntegrationSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Test routes without authentication middleware for debugging
 Route::get('lensometer-records', [LensometerController::class, 'getRecords']);
 Route::get('refraction-records', [RefractionController::class, 'getRecords']);
+// Device integration settings (could be restricted later)
+Route::get('device-integration-settings', [DeviceIntegrationSettingsController::class, 'index']);
+Route::post('device-integration-settings/refractometer', [DeviceIntegrationSettingsController::class, 'upsertRefractometer']);
+Route::post('device-integration-settings/lensometer', [DeviceIntegrationSettingsController::class, 'upsertLensometer']);
 
 // Simple test route
 Route::get('test', function() {

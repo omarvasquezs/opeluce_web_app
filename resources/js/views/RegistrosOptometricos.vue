@@ -709,6 +709,7 @@
               <i v-if="selectedCategory === 'lensometria'" class="fas fa-microscope me-2"></i>
               <i v-else class="fas fa-eye me-2"></i>
               {{ selectedCategory === 'lensometria' ? 'Resultados de Lensómetro' : 'Resultados Auto Kerato-refractómetro' }}
+              <span v-if="selectedCategory==='refraccion' && isMockRefraction" class="badge bg-warning text-dark ms-2">MODO DEMO</span>
             </h5>
             <button @click="closeRecordsModal" class="classic-close-btn">×</button>
           </div>
@@ -926,6 +927,11 @@ const perPage = ref(20)
 const isLoadingRecords = ref(false)
 const availableRecords = ref([])
 const showRecordsModal = ref(false)
+// Flag for mock refraction data (when backend couldn't reach real device folder)
+const isMockRefraction = computed(() => {
+  if (selectedCategory.value !== 'refraccion') return false
+  return availableRecords.value.some(r => r.mock)
+})
 
 // Computed properties
 const canProceedToStep2 = computed(() => {
