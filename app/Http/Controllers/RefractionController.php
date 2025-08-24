@@ -42,87 +42,16 @@ class RefractionController extends Controller
             $allowMock = (bool)($setting->options['allow_mock'] ?? false);
             $debug = $request->boolean('debug');
             if (!is_dir($xmlPath)) {
+                // Removed mock fallback: return empty results so UI is not misled by synthetic data.
                 Log::warning('XML folder not accessible: ' . $xmlPath);
-                if (!$allowMock) {
-                    return response()->json($debug ? [
-                        'records' => [],
-                        'debug' => [
-                            'reason' => 'path_not_found',
-                            'xml_path' => $xmlPath,
-                            'pattern' => null,
-                        ]
-                    ] : []);
-                }
-                // Return mock data for testing (include mock flag for UI) only if allowed
-                $mock = [
-                    [
-                        'id' => 'mock-1',
-                        'mock' => true,
-                        'filename' => 'M-Serial7_2025-07-25_23-18-01.xml',
-                        'examination_date' => '2025-07-25',
-                        'examination_time' => '23:18:01',
-                        'patient_id' => '',
-                        'od' => [
-                            'esf' => '0.50',
-                            'cil' => '0.0',
-                            'eje' => '0',
-                        ],
-                        'oi' => [
-                            'esf' => '0.50',
-                            'cil' => '-0.25',
-                            'eje' => '25',
-                        ],
-                        'dip' => '65.50',
-                        'keratometry' => [
-                            'od' => [
-                                'k1' => '41.75',
-                                'k1_axis' => '170',
-                                'k2' => '42.25',
-                                'k2_axis' => '80',
-                            ],
-                            'oi' => [
-                                'k1' => '42.00',
-                                'k1_axis' => '15',
-                                'k2' => '42.75',
-                                'k2_axis' => '105',
-                            ],
-                        ],
-                    ],
-                    [
-                        'id' => 'mock-2',
-                        'mock' => true,
-                        'filename' => 'M-Serial7_2025-07-25_23-19-45.xml',
-                        'examination_date' => '2025-07-25',
-                        'examination_time' => '23:19:45',
-                        'patient_id' => '',
-                        'od' => [
-                            'esf' => '0.75',
-                            'cil' => '-0.25',
-                            'eje' => '170',
-                        ],
-                        'oi' => [
-                            'esf' => '0.50',
-                            'cil' => '-0.25',
-                            'eje' => '175',
-                        ],
-                        'dip' => '65.00',
-                        'keratometry' => [
-                            'od' => [
-                                'k1' => '42.00',
-                                'k1_axis' => '170',
-                                'k2' => '42.75',
-                                'k2_axis' => '80',
-                            ],
-                            'oi' => [
-                                'k1' => '42.25',
-                                'k1_axis' => '10',
-                                'k2' => '43.25',
-                                'k2_axis' => '100',
-                            ],
-                        ],
+                return response()->json($debug ? [
+                    'records' => [],
+                    'debug' => [
+                        'reason' => 'path_not_found',
+                        'xml_path' => $xmlPath,
+                        'pattern' => null,
                     ]
-                ];
-                return response()->json($debug ? ['records' => $mock, 'debug' => ['reason' => 'mock_used_path_missing','xml_path' => $xmlPath]] : $mock);
+                ] : []);
             }
             
             $records = [];

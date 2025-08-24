@@ -44,6 +44,8 @@ Route::get('refraction-records', [RefractionController::class, 'getRecords']);
 Route::get('device-integration-settings', [DeviceIntegrationSettingsController::class, 'index']);
 Route::post('device-integration-settings/refractometer', [DeviceIntegrationSettingsController::class, 'upsertRefractometer']);
 Route::post('device-integration-settings/lensometer', [DeviceIntegrationSettingsController::class, 'upsertLensometer']);
+Route::post('device-integration-settings/lensometer/test', [DeviceIntegrationSettingsController::class, 'testLensometer']);
+Route::post('device-integration-settings/refractometer/test', [DeviceIntegrationSettingsController::class, 'testRefractometer']);
 
 // Simple test route
 Route::get('test', function() {

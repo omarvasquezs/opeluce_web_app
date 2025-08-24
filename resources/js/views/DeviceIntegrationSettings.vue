@@ -42,7 +42,10 @@
                   <input class="form-check-input" type="checkbox" v-model="refractometer.enabled" id="refEnabled" />
                   <label class="form-check-label" for="refEnabled">Habilitado</label>
                 </div>
-                <button class="btn btn-primary" :disabled="savingRef">{{ savingRef ? 'Guardando...' : 'Guardar' }}</button>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary" :disabled="savingRef">{{ savingRef ? 'Guardando...' : 'Guardar' }}</button>
+                  <button type="button" class="btn btn-outline-primary" @click="testRefractometerManual" :disabled="savingRef">Probar</button>
+                </div>
               </form>
             </div>
         </div>
@@ -95,7 +98,10 @@
                   <input class="form-check-input" type="checkbox" v-model="lensometer.enabled" id="lensEnabled" />
                   <label class="form-check-label" for="lensEnabled">Habilitado</label>
                 </div>
-                <button class="btn btn-secondary" :disabled="savingLens">{{ savingLens ? 'Guardando...' : 'Guardar' }}</button>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-secondary" :disabled="savingLens">{{ savingLens ? 'Guardando...' : 'Guardar' }}</button>
+                  <button type="button" class="btn btn-outline-secondary" @click="testLensometerManual" :disabled="savingLens">Probar</button>
+                </div>
               </form>
             </div>
         </div>
@@ -112,6 +118,10 @@ const refractometer = ref({ name: 'default', poll_interval_seconds: 30, history_
 const lensometer = ref({ name: 'default', port: 5432, table_name: 'lensmeterresulttbl', enabled: true });
 const savingRef = ref(false);
 const savingLens = ref(false);
+const testingRef = ref(false);
+const testingLens = ref(false);
+const lastRefTest = ref(null);
+const lastLensTest = ref(null);
 
 async function loadSettings() {
   try {
@@ -139,10 +149,59 @@ async function saveLensometer() {
   try {
     const { data } = await axios.post('/api/device-integration-settings/lensometer', lensometer.value);
     lensometer.value = data;
-    alert('Configuración de Lensómetro guardada');
   } catch (e) {
-    alert('Error guardando lensómetro');
-  } finally { savingLens.value = false; }
+    const msg = e?.response?.data?.message || e?.message || 'Error desconocido';
+    alert('Error guardando lensómetro: ' + msg);
+    savingLens.value = false;
+    return;
+  }
+
+  // Always attempt test after a successful save
+  try {
+    const { data: test } = await axios.post('/api/device-integration-settings/lensometer/test', lensometer.value);
+    if (test.success) {
+      alert(`Configuración guardada. Conexión OK. Tabla: ${test.table_exists ? 'sí' : 'no'}${test.row_count !== null ? ' | Filas: '+ test.row_count : ''}`);
+    } else {
+      alert(`Configuración guardada, pero prueba falló: ${test.message || 'sin detalle'}${test.error ? ' ('+test.error+')' : ''}`);
+    }
+  } catch (e) {
+    const err = e?.response?.data;
+    alert('Configuración guardada, pero error ejecutando prueba: ' + (err?.error || err?.message || e.message));
+  } finally {
+    savingLens.value = false;
+  }
+}
+
+async function testLensometerManual() {
+  testingLens.value = true;
+  try {
+    const { data: test } = await axios.post('/api/device-integration-settings/lensometer/test', lensometer.value);
+    if (test.success) {
+      alert(`Conexión OK. Tabla: ${test.table_exists ? 'sí' : 'no'}${test.row_count !== null ? ' | Filas: '+ test.row_count : ''}`);
+    } else {
+      alert(`Prueba falló: ${test.message || 'sin detalle'}${test.error ? ' ('+test.error+')' : ''}`);
+    }
+    lastLensTest.value = new Date().toLocaleTimeString();
+  } catch (e) {
+    const err = e?.response?.data;
+    alert('Error ejecutando prueba: ' + (err?.error || err?.message || e.message));
+  } finally { testingLens.value = false; }
+}
+
+async function testRefractometerManual() {
+  testingRef.value = true;
+  try {
+    const { data: test } = await axios.post('/api/device-integration-settings/refractometer/test', refractometer.value);
+    if (test.success) {
+      alert(`Ruta OK. Archivos: ${test.file_count}${test.latest_file ? ' | Último: '+test.latest_file : ''}`);
+    } else {
+      alert(`Prueba falló: ${test.message || 'sin detalle'}${test.error ? ' ('+test.error+')' : ''}`);
+    }
+    lastRefTest.value = new Date().toLocaleTimeString();
+  } catch (e) {
+    const err = e?.response?.data;
+    alert('Error ejecutando prueba: ' + (err?.error || err?.message || e.message));
+  } finally { testingRef.value = false; }
 }
 
 onMounted(loadSettings);

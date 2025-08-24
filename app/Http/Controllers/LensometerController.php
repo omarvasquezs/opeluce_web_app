@@ -47,453 +47,121 @@ class LensometerController extends Controller
                 }
 
                 $table = $setting->table_name ?: 'lensmeterresulttbl';
-                $query = DB::connection($connectionName)->table($table);
-                
-                // Get records ordered by most recent first, with limit to prevent too many records
-                $records = $query->orderBy('examination_date', 'desc')
-                               ->orderBy('examination_time', 'desc')
-                               ->limit($limit)
-                               ->get();
+                $conn = DB::connection($connectionName);
+                $query = $conn->table($table);
+
+                $debug = $request->boolean('debug');
+
+                // Discover available columns to avoid silent exceptions that return []
+                $columns = [];
+                try { $columns = $conn->getSchemaBuilder()->getColumnListing($table); } catch (\Throwable $e) {
+                    if ($debug) {
+                        return response()->json([ 'records' => [], 'debug' => ['error' => 'schema_list_failed', 'message' => $e->getMessage(), 'table' => $table] ]);
+                    }
+                    return response()->json([]);
+                }
+
+                $orderDateCol = null; $orderTimeCol = null;
+                $candidateDate = ['examination_date','exam_date','measured_date','created_date','date'];
+                $candidateTime = ['examination_time','exam_time','measured_time','created_time','time'];
+                foreach ($candidateDate as $c) if (in_array($c, $columns)) { $orderDateCol = $c; break; }
+                foreach ($candidateTime as $c) if (in_array($c, $columns)) { $orderTimeCol = $c; break; }
+
+                if ($orderDateCol) {
+                    $query->orderBy($orderDateCol, 'desc');
+                }
+                if ($orderTimeCol) {
+                    $query->orderBy($orderTimeCol, 'desc');
+                }
+
+                $records = $query->limit($limit)->get();
                 
                 // Transform the data to match the expected format
-                $transformedRecords = $records->map(function ($record) {
+                $transformedRecords = $records->map(function ($record) use ($columns) {
+                    $r = (array)$record;
+                    $get = function($keys, $default=null) use ($r) {
+                        foreach ((array)$keys as $k) {
+                            if (array_key_exists($k, $r) && $r[$k] !== null) return $r[$k];
+                        }
+                        return $default;
+                    };
+
+                    // Prefer the actual column names from your DB, then fall back to previous heuristics
+                    $id = $get(['serial_id','id','result_id','sequence_number'], null);
+                    if ($id === null) $id = uniqid('lm_');
+
+                    $model = $get(['model_name','model','device_model'], 'HUVITZ_L');
+                    $created = $get(['create_time','created_date','created_at','create_time'], null);
+                    $measured = $get(['measure_time','measured_date','measured_at','measure_time'], $created);
+
+                    // Sphere (esf)
+                    $od_esf = $get(['sph_r','sph_right','sph_right_eye','od_sph','od_sphere'], null);
+                    $oi_esf = $get(['sph_l','sph_left','sph_left_eye','oi_sph','oi_sphere'], null);
+                    // Cylinder
+                    $od_cil = $get(['cyl_r','cyl_right','od_cyl','od_cylinder'], null);
+                    $oi_cil = $get(['cyl_l','cyl_left','oi_cyl','oi_cylinder'], null);
+                    // Axis
+                    $od_eje = $get(['axis_r','axis_right','od_axis'], null);
+                    $oi_eje = $get(['axis_l','axis_left','oi_axis'], null);
+                    // Add
+                    $od_add = $get(['add_1_r','add1_r','add_1_right','add_1','od_add'], null);
+                    $oi_add = $get(['add_1_l','add1_l','add_1_left','add_1_l','oi_add'], null);
+
                     return [
-                        'id' => $record->id,
-                        'serial_id' => $record->serial_id ?? $record->id,
-                        'exam_id' => $record->exam_id ?? '-1',
-                        'model' => $record->model ?? 'HUVITZ_L',
-                        'examination_date' => $record->examination_date,
-                        'examination_time' => $record->examination_time,
-                        'created_date' => $record->created_date ?? $record->examination_date,
-                        'measured_date' => $record->measured_date ?? $record->examination_date,
-                        'lens_type' => $record->lens_type,
+                        'id' => $id,
+                        'serial_id' => $get(['serial_id','sequence_number','id'], $id),
+                        'exam_id' => $get(['exam_id','examid','examination_id'], '-1'),
+                        'model' => $model,
+                        'examination_date' => $created ? (string)$created : date('Y-m-d'),
+                        'examination_time' => $measured ? (string)$measured : date('H:i:s'),
+                        'created_date' => $created,
+                        'measured_date' => $measured,
+                        'lens_type' => $get(['lens_type','lens_category'], ''),
                         'od' => [
-                            'esf' => $record->od_esf,
-                            'cil' => $record->od_cil,
-                            'eje' => $record->od_eje,
-                            'add' => $record->od_add,
+                            'esf' => $od_esf,
+                            'cil' => $od_cil,
+                            'eje' => $od_eje,
+                            'add' => $od_add,
                         ],
                         'oi' => [
-                            'esf' => $record->oi_esf,
-                            'cil' => $record->oi_cil,
-                            'eje' => $record->oi_eje,
-                            'add' => $record->oi_add,
+                            'esf' => $oi_esf,
+                            'cil' => $oi_cil,
+                            'eje' => $oi_eje,
+                            'add' => $oi_add,
                         ],
-                        'patient_id' => $record->patient_id,
-                        'notes' => $record->notes ?? null,
+                        'patient_id' => $get(['patient_id','patientid','id_patient'], null),
+                        'notes' => $get(['notes','note','comment','comments'], null),
                     ];
                 });
                 
+                if ($debug) {
+                    return response()->json([
+                        'records' => $transformedRecords,
+                        'debug' => [
+                            'table' => $table,
+                            'columns' => $columns,
+                            'order_date' => $orderDateCol,
+                            'order_time' => $orderTimeCol,
+                            'count' => count($transformedRecords),
+                            'raw_first_row_keys' => isset($records[0]) ? array_keys((array)$records[0]) : [],
+                        ]
+                    ]);
+                }
                 return response()->json($transformedRecords);
                 
             } catch (\Exception $dbException) {
-                Log::warning('Lensometer database not available: ' . $dbException->getMessage());
-                if (!$allowMock) {
-                    return response()->json([]);
+                Log::warning('Lensometer database query error: ' . $dbException->getMessage());
+                if ($request->boolean('debug')) {
+                    return response()->json([
+                        'records' => [],
+                        'debug' => [
+                            'error' => 'query_failed',
+                            'message' => $dbException->getMessage(),
+                            'table' => $setting->table_name ?: 'lensmeterresulttbl'
+                        ]
+                    ]);
                 }
-                // Return mock data for testing when database is not available (allowed)
-                return response()->json([
-                    [
-                        'id' => 16,
-                        'serial_id' => 16,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-25',
-                        'examination_time' => '12:00:00',
-                        'created_date' => '2025-07-25 12:00:00',
-                        'measured_date' => '2025-07-25 12:00:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+0.50',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.50',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 15,
-                        'serial_id' => 15,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-25',
-                        'examination_time' => '12:00:00',
-                        'created_date' => '2025-07-25 12:00:00',
-                        'measured_date' => '2025-07-25 12:00:00',
-                        'lens_type' => 'progressive',
-                        'od' => [
-                            'esf' => '+0.50',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '+2.50',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.50',
-                            'cil' => '-0.50',
-                            'eje' => '152',
-                            'add' => '+4.00',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 14,
-                        'serial_id' => 14,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-24',
-                        'examination_time' => '15:30:00',
-                        'created_date' => '2025-07-24 15:30:00',
-                        'measured_date' => '2025-07-24 15:30:00',
-                        'lens_type' => 'bifocal',
-                        'od' => [
-                            'esf' => '+1.50',
-                            'cil' => '+0.25',
-                            'eje' => '051',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+1.50',
-                            'cil' => '-0.50',
-                            'eje' => '160',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 13,
-                        'serial_id' => 13,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-24',
-                        'examination_time' => '10:15:00',
-                        'created_date' => '2025-07-24 10:15:00',
-                        'measured_date' => '2025-07-24 10:15:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+0.00',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.00',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 12,
-                        'serial_id' => 12,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-23',
-                        'examination_time' => '16:45:00',
-                        'created_date' => '2025-07-23 16:45:00',
-                        'measured_date' => '2025-07-23 16:45:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+0.00',
-                            'cil' => '-0.50',
-                            'eje' => '171',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+1.75',
-                            'cil' => '-2.00',
-                            'eje' => '003',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 11,
-                        'serial_id' => 11,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-23',
-                        'examination_time' => '14:30:00',
-                        'created_date' => '2025-07-23 14:30:00',
-                        'measured_date' => '2025-07-23 14:30:00',
-                        'lens_type' => 'progressive',
-                        'od' => [
-                            'esf' => '-0.25',
-                            'cil' => '-2.50',
-                            'eje' => '007',
-                            'add' => '+2.50',
-                        ],
-                        'oi' => [
-                            'esf' => '+2.50',
-                            'cil' => '-2.50',
-                            'eje' => '172',
-                            'add' => '+4.00',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 10,
-                        'serial_id' => 10,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-22',
-                        'examination_time' => '11:20:00',
-                        'created_date' => '2025-07-22 11:20:00',
-                        'measured_date' => '2025-07-22 11:20:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+3.00',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+5.50',
-                            'cil' => '+1.50',
-                            'eje' => '062',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 9,
-                        'serial_id' => 9,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-22',
-                        'examination_time' => '09:15:00',
-                        'created_date' => '2025-07-22 09:15:00',
-                        'measured_date' => '2025-07-22 09:15:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '-0.50',
-                            'cil' => '+1.50',
-                            'eje' => '102',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.50',
-                            'cil' => '-3.50',
-                            'eje' => '180',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 8,
-                        'serial_id' => 8,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-21',
-                        'examination_time' => '15:45:00',
-                        'created_date' => '2025-07-21 15:45:00',
-                        'measured_date' => '2025-07-21 15:45:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+2.75',
-                            'cil' => '-1.50',
-                            'eje' => '110',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+3.75',
-                            'cil' => '+3.50',
-                            'eje' => '002',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 7,
-                        'serial_id' => 7,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-21',
-                        'examination_time' => '13:30:00',
-                        'created_date' => '2025-07-21 13:30:00',
-                        'measured_date' => '2025-07-21 13:30:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+2.00',
-                            'cil' => '-4.00',
-                            'eje' => '005',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+3.25',
-                            'cil' => '-1.75',
-                            'eje' => '175',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 6,
-                        'serial_id' => 6,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-20',
-                        'examination_time' => '16:00:00',
-                        'created_date' => '2025-07-20 16:00:00',
-                        'measured_date' => '2025-07-20 16:00:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+1.75',
-                            'cil' => '-0.75',
-                            'eje' => '177',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+2.50',
-                            'cil' => '+0.75',
-                            'eje' => '158',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 5,
-                        'serial_id' => 5,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-20',
-                        'examination_time' => '10:30:00',
-                        'created_date' => '2025-07-20 10:30:00',
-                        'measured_date' => '2025-07-20 10:30:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+0.50',
-                            'cil' => '-1.50',
-                            'eje' => '178',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.00',
-                            'cil' => '-2.00',
-                            'eje' => '173',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 4,
-                        'serial_id' => 4,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-19',
-                        'examination_time' => '14:45:00',
-                        'created_date' => '2025-07-19 14:45:00',
-                        'measured_date' => '2025-07-19 14:45:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+1.00',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '-1.00',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 3,
-                        'serial_id' => 3,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-19',
-                        'examination_time' => '11:20:00',
-                        'created_date' => '2025-07-19 11:20:00',
-                        'measured_date' => '2025-07-19 11:20:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+0.75',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+0.75',
-                            'cil' => '+0.25',
-                            'eje' => '147',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 2,
-                        'serial_id' => 2,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-18',
-                        'examination_time' => '15:10:00',
-                        'created_date' => '2025-07-18 15:10:00',
-                        'measured_date' => '2025-07-18 15:10:00',
-                        'lens_type' => 'progressive',
-                        'od' => [
-                            'esf' => '+3.00',
-                            'cil' => '-0.75',
-                            'eje' => '077',
-                            'add' => '+2.50',
-                        ],
-                        'oi' => [
-                            'esf' => '+3.25',
-                            'cil' => '-0.25',
-                            'eje' => '060',
-                            'add' => '+2.50',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ],
-                    [
-                        'id' => 1,
-                        'serial_id' => 1,
-                        'exam_id' => '-1',
-                        'model' => 'HUVITZ_L',
-                        'examination_date' => '2025-07-18',
-                        'examination_time' => '09:30:00',
-                        'created_date' => '2025-07-18 09:30:00',
-                        'measured_date' => '2025-07-18 09:30:00',
-                        'lens_type' => 'monofocal',
-                        'od' => [
-                            'esf' => '+4.75',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'oi' => [
-                            'esf' => '+4.75',
-                            'cil' => '+0.00',
-                            'eje' => '000',
-                            'add' => '',
-                        ],
-                        'patient_id' => null,
-                        'notes' => null,
-                    ]
-                ]);
+                return response()->json([]);
             }
             
         } catch (\Exception $e) {

@@ -1106,24 +1106,40 @@ async function consultarRegistros() {
       console.log('Making request to:', `${window.axios.defaults.baseURL}/api/lensometer-records`)
       response = await axios.get('/api/lensometer-records', {
         params: {
-          // Don't filter by patient_id or date - show all available records
-          limit: 100 // Limit to prevent too many records
+          limit: 100,
+          debug: 1,
+          t: Date.now()
         }
       })
+      console.log('Lensometer raw response length:', Array.isArray(response.data) ? response.data.length : (response.data.records?.length))
+      console.log('Lensometer first item:', Array.isArray(response.data) ? response.data[0] : response.data.records?.[0])
+      console.log('Lensometer debug response:', response.data?.debug)
     } else if (selectedCategory.value === 'refraccion') {
       // Query XML files from shared folder \\127.0.0.1\kr - get all available records
       console.log('Making request to:', `${window.axios.defaults.baseURL}/api/refraction-records`)
       response = await axios.get('/api/refraction-records', {
         params: {
-          // Don't filter by patient_id or date - show all available records
-          limit: 100 // Limit to prevent too many records
+          limit: 100,
+          debug: 1
         }
       })
+      console.log('Refraction debug response:', response.data?.debug)
     }
     
     if (response && response.data) {
-      availableRecords.value = response.data
-      
+      // Support two response shapes:
+      // - production: response.data is an array of records
+      // - debug: response.data is an object { records: [...], debug: {...} }
+      if (Array.isArray(response.data)) {
+        availableRecords.value = response.data
+      } else if (response.data.records && Array.isArray(response.data.records)) {
+        console.log('Using wrapped records (debug mode). Debug:', response.data.debug)
+        availableRecords.value = response.data.records
+      } else {
+        // Fallback: try to coerce into array
+        availableRecords.value = Array.isArray(response.data) ? response.data : []
+      }
+
       // Always show modal regardless of number of records
       showRecordsModal.value = true
     }
