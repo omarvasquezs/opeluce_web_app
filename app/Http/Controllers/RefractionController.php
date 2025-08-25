@@ -149,6 +149,22 @@ class RefractionController extends Controller
         
         $xpath = new DOMXPath($doc);
         
+        // Debug: Log the full XML structure for the first file
+        static $debugLogged = false;
+        if (!$debugLogged) {
+            Log::info('XML Debug - First file structure: ' . $xmlFile);
+            Log::info('XML Content: ' . $doc->saveXML());
+            
+            // List all element names in the XML
+            $allElements = $xpath->query('//*');
+            $elementNames = [];
+            foreach ($allElements as $element) {
+                $elementNames[] = $element->nodeName;
+            }
+            Log::info('All XML elements found: ' . implode(', ', array_unique($elementNames)));
+            $debugLogged = true;
+        }
+        
         // Extract basic information
         // Fallback sequences for date/time tags used by different manufacturers
         $dateCandidates = ['//Date','//ExamDate','//DATE','//MeasurementDate'];
@@ -175,39 +191,174 @@ class RefractionController extends Controller
             'patient_id' => $this->extractXmlValue($xpath, '//PatientID') ?: '',
         ];
         
+        // Try more generic XPath queries for refraction data with namespace support
+        $sphereQueries = [
+            '//nsREF:R/nsREF:List/nsREF:Sphere', '//nsREF:R/nsREF:Median/nsREF:Sphere',
+            '//nsREF:R//nsREF:Sphere', '//*[local-name()="R"]/*[local-name()="Sphere"]',
+            '//*[local-name()="R"]//*[local-name()="Sphere"]',
+            '//OD/Sphere', '//OD/Sph', '//R/Sphere', '//Right/Sphere',
+            '//Sphere[@eye="OD"]', '//Sphere[@eye="R"]', '//Sphere[@eye="Right"]',
+            '//OD//Sphere', '//R//Sphere', '//Right//Sphere',
+            '//*[contains(local-name(), "Sphere") and (ancestor::*[contains(local-name(), "OD")] or ancestor::*[contains(local-name(), "Right")])]'
+        ];
+        
+        $cylinderQueries = [
+            '//nsREF:R/nsREF:List/nsREF:Cylinder', '//nsREF:R/nsREF:Median/nsREF:Cylinder',
+            '//nsREF:R//nsREF:Cylinder', '//*[local-name()="R"]/*[local-name()="Cylinder"]',
+            '//*[local-name()="R"]//*[local-name()="Cylinder"]',
+            '//OD/Cylinder', '//OD/Cyl', '//R/Cylinder', '//Right/Cylinder',
+            '//Cylinder[@eye="OD"]', '//Cylinder[@eye="R"]', '//Cylinder[@eye="Right"]',
+            '//OD//Cylinder', '//R//Cylinder', '//Right//Cylinder',
+            '//*[contains(local-name(), "Cylinder") and (ancestor::*[contains(local-name(), "OD")] or ancestor::*[contains(local-name(), "Right")])]'
+        ];
+        
+        $axisQueries = [
+            '//nsREF:R/nsREF:List/nsREF:Axis', '//nsREF:R/nsREF:Median/nsREF:Axis',
+            '//nsREF:R//nsREF:Axis', '//*[local-name()="R"]/*[local-name()="Axis"]',
+            '//*[local-name()="R"]//*[local-name()="Axis"]',
+            '//OD/Axis', '//R/Axis', '//Right/Axis',
+            '//Axis[@eye="OD"]', '//Axis[@eye="R"]', '//Axis[@eye="Right"]',
+            '//OD//Axis', '//R//Axis', '//Right//Axis',
+            '//*[contains(local-name(), "Axis") and (ancestor::*[contains(local-name(), "OD")] or ancestor::*[contains(local-name(), "Right")])]'
+        ];
+        
         // Extract OD (Right Eye) refraction data
         $record['od'] = [
-            'esf' => $this->extractFirstValue($xpath, ['//OD/Sphere','//OD/Sph','//R/Sphere','//Right/Sphere']) ?: '',
-            'cil' => $this->extractFirstValue($xpath, ['//OD/Cylinder','//OD/Cyl','//R/Cylinder','//Right/Cylinder']) ?: '',
-            'eje' => $this->extractFirstValue($xpath, ['//OD/Axis','//R/Axis','//Right/Axis']) ?: '',
+            'esf' => $this->extractFirstValue($xpath, $sphereQueries) ?: '',
+            'cil' => $this->extractFirstValue($xpath, $cylinderQueries) ?: '',
+            'eje' => $this->extractFirstValue($xpath, $axisQueries) ?: '',
+        ];
+        
+        // Left eye queries with namespace support
+        $sphereQueriesOI = [
+            '//nsREF:L/nsREF:List/nsREF:Sphere', '//nsREF:L/nsREF:Median/nsREF:Sphere',
+            '//nsREF:L//nsREF:Sphere', '//*[local-name()="L"]/*[local-name()="Sphere"]',
+            '//*[local-name()="L"]//*[local-name()="Sphere"]',
+            '//OI/Sphere', '//OS/Sphere', '//L/Sphere', '//Left/Sphere',
+            '//Sphere[@eye="OI"]', '//Sphere[@eye="OS"]', '//Sphere[@eye="L"]', '//Sphere[@eye="Left"]',
+            '//OI//Sphere', '//OS//Sphere', '//L//Sphere', '//Left//Sphere',
+            '//*[contains(local-name(), "Sphere") and (ancestor::*[contains(local-name(), "OI")] or ancestor::*[contains(local-name(), "OS")] or ancestor::*[contains(local-name(), "Left")])]'
+        ];
+        
+        $cylinderQueriesOI = [
+            '//nsREF:L/nsREF:List/nsREF:Cylinder', '//nsREF:L/nsREF:Median/nsREF:Cylinder',
+            '//nsREF:L//nsREF:Cylinder', '//*[local-name()="L"]/*[local-name()="Cylinder"]',
+            '//*[local-name()="L"]//*[local-name()="Cylinder"]',
+            '//OI/Cylinder', '//OS/Cylinder', '//L/Cylinder', '//Left/Cylinder',
+            '//Cylinder[@eye="OI"]', '//Cylinder[@eye="OS"]', '//Cylinder[@eye="L"]', '//Cylinder[@eye="Left"]',
+            '//OI//Cylinder', '//OS//Cylinder', '//L//Cylinder', '//Left//Cylinder',
+            '//*[contains(local-name(), "Cylinder") and (ancestor::*[contains(local-name(), "OI")] or ancestor::*[contains(local-name(), "OS")] or ancestor::*[contains(local-name(), "Left")])]'
+        ];
+        
+        $axisQueriesOI = [
+            '//nsREF:L/nsREF:List/nsREF:Axis', '//nsREF:L/nsREF:Median/nsREF:Axis',
+            '//nsREF:L//nsREF:Axis', '//*[local-name()="L"]/*[local-name()="Axis"]',
+            '//*[local-name()="L"]//*[local-name()="Axis"]',
+            '//OI/Axis', '//OS/Axis', '//L/Axis', '//Left/Axis',
+            '//Axis[@eye="OI"]', '//Axis[@eye="OS"]', '//Axis[@eye="L"]', '//Axis[@eye="Left"]',
+            '//OI//Axis', '//OS//Axis', '//L//Axis', '//Left//Axis',
+            '//*[contains(local-name(), "Axis") and (ancestor::*[contains(local-name(), "OI")] or ancestor::*[contains(local-name(), "OS")] or ancestor::*[contains(local-name(), "Left")])]'
         ];
         
         // Extract OI (Left Eye) refraction data
         $record['oi'] = [
-            'esf' => $this->extractFirstValue($xpath, ['//OI/Sphere','//OS/Sphere','//L/Sphere','//Left/Sphere']) ?: '',
-            'cil' => $this->extractFirstValue($xpath, ['//OI/Cylinder','//OS/Cylinder','//L/Cylinder','//Left/Cylinder']) ?: '',
-            'eje' => $this->extractFirstValue($xpath, ['//OI/Axis','//OS/Axis','//L/Axis','//Left/Axis']) ?: '',
+            'esf' => $this->extractFirstValue($xpath, $sphereQueriesOI) ?: '',
+            'cil' => $this->extractFirstValue($xpath, $cylinderQueriesOI) ?: '',
+            'eje' => $this->extractFirstValue($xpath, $axisQueriesOI) ?: '',
         ];
         
-        // Extract DIP (Pupillary Distance)
-        $record['dip'] = $this->extractXmlValue($xpath, '//PD') ?: $this->extractXmlValue($xpath, '//PupillaryDistance') ?: '';
+        // Extract DIP (Pupillary Distance) with more options and clean it up
+        $dipQueries = [
+            '//nsREF:PD/nsREF:Distance', '//nsREF:PD', '//*[local-name()="PD"]/*[local-name()="Distance"]',
+            '//*[local-name()="PD"]', '//PD', '//PupillaryDistance', '//Pd', '//pupillaryDistance', 
+            '//*[contains(local-name(), "PD")]', '//*[contains(local-name(), "Pupillary")]'
+        ];
+        $dipRaw = $this->extractFirstValue($xpath, $dipQueries) ?: '';
+        // Clean up DIP value - it might have multiple values or whitespace
+        $dipClean = '';
+        if ($dipRaw) {
+            // Split by whitespace and take the first valid number
+            $dipParts = preg_split('/\s+/', trim($dipRaw));
+            foreach ($dipParts as $part) {
+                if (is_numeric($part) && $part > 0) {
+                    $dipClean = $part;
+                    break;
+                }
+            }
+        }
+        $record['dip'] = $dipClean;
         
-        // Extract keratometry data if available
-        // Extract keratometry data (include axis values when present). Different devices use varied tag names.
-        $record['keratometry'] = [
+        // Extract keratometry data with namespace support
+        $keratometryQueries = [
             'od' => [
-                'k1' => $this->extractFirstValue($xpath, ['//OD/K1','//R/K1','//Right/K1']) ?: '',
-                'k1_axis' => $this->extractFirstValue($xpath, ['//OD/K1Axis','//OD/K1_Axis','//R/K1Axis','//Right/K1Axis']) ?: '',
-                'k2' => $this->extractFirstValue($xpath, ['//OD/K2','//R/K2','//Right/K2']) ?: '',
-                'k2_axis' => $this->extractFirstValue($xpath, ['//OD/K2Axis','//OD/K2_Axis','//R/K2Axis','//Right/K2Axis']) ?: '',
+                'k1' => [
+                    '//nsKM:R/nsKM:List/nsKM:R1/nsKM:Power', '//nsKM:R/nsKM:Median/nsKM:R1/nsKM:Power',
+                    '//nsKM:R//nsKM:R1//nsKM:Power', '//*[local-name()="R"]//*[local-name()="R1"]//*[local-name()="Power"]',
+                    '//OD/K1','//R/K1','//Right/K1', '//OD//K1', '//R//K1', '//Right//K1',
+                    '//*[contains(local-name(), "K1") and (ancestor::*[contains(local-name(), "OD")] or ancestor::*[contains(local-name(), "Right")])]'
+                ],
+                'k1_axis' => [
+                    '//nsKM:R/nsKM:List/nsKM:R1/nsKM:Axis', '//nsKM:R/nsKM:Median/nsKM:R1/nsKM:Axis',
+                    '//nsKM:R//nsKM:R1//nsKM:Axis', '//*[local-name()="R"]//*[local-name()="R1"]//*[local-name()="Axis"]',
+                    '//OD/K1Axis','//OD/K1_Axis','//R/K1Axis','//Right/K1Axis', '//OD//K1Axis', '//R//K1Axis', '//Right//K1Axis'
+                ],
+                'k2' => [
+                    '//nsKM:R/nsKM:List/nsKM:R2/nsKM:Power', '//nsKM:R/nsKM:Median/nsKM:R2/nsKM:Power',
+                    '//nsKM:R//nsKM:R2//nsKM:Power', '//*[local-name()="R"]//*[local-name()="R2"]//*[local-name()="Power"]',
+                    '//OD/K2','//R/K2','//Right/K2', '//OD//K2', '//R//K2', '//Right//K2',
+                    '//*[contains(local-name(), "K2") and (ancestor::*[contains(local-name(), "OD")] or ancestor::*[contains(local-name(), "Right")])]'
+                ],
+                'k2_axis' => [
+                    '//nsKM:R/nsKM:List/nsKM:R2/nsKM:Axis', '//nsKM:R/nsKM:Median/nsKM:R2/nsKM:Axis',
+                    '//nsKM:R//nsKM:R2//nsKM:Axis', '//*[local-name()="R"]//*[local-name()="R2"]//*[local-name()="Axis"]',
+                    '//OD/K2Axis','//OD/K2_Axis','//R/K2Axis','//Right/K2Axis', '//OD//K2Axis', '//R//K2Axis', '//Right//K2Axis'
+                ],
             ],
             'oi' => [
-                'k1' => $this->extractFirstValue($xpath, ['//OI/K1','//OS/K1','//L/K1','//Left/K1']) ?: '',
-                'k1_axis' => $this->extractFirstValue($xpath, ['//OI/K1Axis','//OS/K1Axis','//OI/K1_Axis','//OS/K1_Axis','//L/K1Axis','//Left/K1Axis']) ?: '',
-                'k2' => $this->extractFirstValue($xpath, ['//OI/K2','//OS/K2','//L/K2','//Left/K2']) ?: '',
-                'k2_axis' => $this->extractFirstValue($xpath, ['//OI/K2Axis','//OS/K2Axis','//OI/K2_Axis','//OS/K2_Axis','//L/K2Axis','//Left/K2Axis']) ?: '',
+                'k1' => [
+                    '//nsKM:L/nsKM:List/nsKM:R1/nsKM:Power', '//nsKM:L/nsKM:Median/nsKM:R1/nsKM:Power',
+                    '//nsKM:L//nsKM:R1//nsKM:Power', '//*[local-name()="L"]//*[local-name()="R1"]//*[local-name()="Power"]',
+                    '//OI/K1','//OS/K1','//L/K1','//Left/K1', '//OI//K1', '//OS//K1', '//L//K1', '//Left//K1',
+                    '//*[contains(local-name(), "K1") and (ancestor::*[contains(local-name(), "OI")] or ancestor::*[contains(local-name(), "OS")] or ancestor::*[contains(local-name(), "Left")])]'
+                ],
+                'k1_axis' => [
+                    '//nsKM:L/nsKM:List/nsKM:R1/nsKM:Axis', '//nsKM:L/nsKM:Median/nsKM:R1/nsKM:Axis',
+                    '//nsKM:L//nsKM:R1//nsKM:Axis', '//*[local-name()="L"]//*[local-name()="R1"]//*[local-name()="Axis"]',
+                    '//OI/K1Axis','//OS/K1Axis','//OI/K1_Axis','//OS/K1_Axis','//L/K1Axis','//Left/K1Axis', '//OI//K1Axis', '//OS//K1Axis', '//L//K1Axis', '//Left//K1Axis'
+                ],
+                'k2' => [
+                    '//nsKM:L/nsKM:List/nsKM:R2/nsKM:Power', '//nsKM:L/nsKM:Median/nsKM:R2/nsKM:Power',
+                    '//nsKM:L//nsKM:R2//nsKM:Power', '//*[local-name()="L"]//*[local-name()="R2"]//*[local-name()="Power"]',
+                    '//OI/K2','//OS/K2','//L/K2','//Left/K2', '//OI//K2', '//OS//K2', '//L//K2', '//Left//K2',
+                    '//*[contains(local-name(), "K2") and (ancestor::*[contains(local-name(), "OI")] or ancestor::*[contains(local-name(), "OS")] or ancestor::*[contains(local-name(), "Left")])]'
+                ],
+                'k2_axis' => [
+                    '//nsKM:L/nsKM:List/nsKM:R2/nsKM:Axis', '//nsKM:L/nsKM:Median/nsKM:R2/nsKM:Axis',
+                    '//nsKM:L//nsKM:R2//nsKM:Axis', '//*[local-name()="L"]//*[local-name()="R2"]//*[local-name()="Axis"]',
+                    '//OI/K2Axis','//OS/K2Axis','//OI/K2_Axis','//OS/K2_Axis','//L/K2Axis','//Left/K2Axis', '//OI//K2Axis', '//OS//K2Axis', '//L//K2Axis', '//Left//K2Axis'
+                ],
             ],
         ];
+        
+        $record['keratometry'] = [
+            'od' => [
+                'k1' => $this->extractFirstValue($xpath, $keratometryQueries['od']['k1']) ?: '',
+                'k1_axis' => $this->extractFirstValue($xpath, $keratometryQueries['od']['k1_axis']) ?: '',
+                'k2' => $this->extractFirstValue($xpath, $keratometryQueries['od']['k2']) ?: '',
+                'k2_axis' => $this->extractFirstValue($xpath, $keratometryQueries['od']['k2_axis']) ?: '',
+            ],
+            'oi' => [
+                'k1' => $this->extractFirstValue($xpath, $keratometryQueries['oi']['k1']) ?: '',
+                'k1_axis' => $this->extractFirstValue($xpath, $keratometryQueries['oi']['k1_axis']) ?: '',
+                'k2' => $this->extractFirstValue($xpath, $keratometryQueries['oi']['k2']) ?: '',
+                'k2_axis' => $this->extractFirstValue($xpath, $keratometryQueries['oi']['k2_axis']) ?: '',
+            ],
+        ];
+        
+        // Debug: Log what we extracted for the first file
+        if (basename($xmlFile) === 'M-Serial7128_20250719_231801_TOPCON_KR-800_4771007.xml') {
+            Log::info('Parsed data for first file: ' . json_encode($record, JSON_PRETTY_PRINT));
+        }
         
         return $record;
     }

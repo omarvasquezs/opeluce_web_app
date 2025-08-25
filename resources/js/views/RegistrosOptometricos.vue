@@ -17,7 +17,7 @@
                 <div class="step-circle">
                   <i class="fas fa-eye"></i>
                 </div>
-                <span class="step-label">Agudeza Visual / Refracción</span>
+                <span class="step-label">Refracción</span>
               </div>
             </div>
           </div>
@@ -205,7 +205,7 @@
                 <!-- Action Buttons -->
                 <div class="form-actions">
                   <button 
-                    @click="revisarAgudezaVisual" 
+                    @click="revisarRefraccion" 
                     class="btn btn-primary btn-lg"
                     :disabled="!canProceedToStep2"
                   >
@@ -229,7 +229,7 @@
               <div class="form-header">
                 <h2 class="form-title">
                   <i class="fas fa-eye me-2"></i>
-                  Agudeza Visual / Refracción
+                  Refracción
                 </h2>
                 <div class="header-controls">
                   <div class="examination-date">
@@ -266,38 +266,6 @@
                 <div class="row g-4">
                   <!-- Left Column - Vision Tests & Refraction -->
                   <div class="col-lg-6">
-                    <!-- Agudeza Visual -->
-                    <div class="measurement-card">
-                      <div class="card-header">
-                        <h5 class="card-title">
-                          <i class="fas fa-eye me-2 text-primary"></i>
-                          Agudeza Visual
-                        </h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="measurement-table modern">
-                          <div class="table-header">
-                            <span class="eye-col"></span>
-                            <span class="header-cell">AVsc</span>
-                            <span class="header-cell">AVcc</span>
-                            <span class="header-cell">AE</span>
-                          </div>
-                          <div class="table-row">
-                            <span class="eye-label od">OD</span>
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.od.avsc" placeholder="0.00">
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.od.avcc" placeholder="0.00">
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.od.ae" placeholder="0.00">
-                          </div>
-                          <div class="table-row">
-                            <span class="eye-label oi">OI</span>
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.oi.avsc" placeholder="0.00">
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.oi.avcc" placeholder="0.00">
-                            <input type="text" class="measurement-input" v-model="agudezaVisual.oi.ae" placeholder="0.00">
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Refracción Automática -->
                     <div class="measurement-card">
                       <div class="card-header">
@@ -348,67 +316,19 @@
                             <span class="eye-label od">OD</span>
                             <div class="kera-fields">
                               <input type="text" class="measurement-input" v-model="queratometria.od.valor1" placeholder="K1">
-                              <span class="field-separator">CIL</span>
-                              <input type="text" class="measurement-input" v-model="queratometria.od.cil1" placeholder="0.00">
+                              <input type="text" class="measurement-input" v-model="queratometria.od.cil1" placeholder="K2">
+                              <input type="text" class="measurement-input" v-model="queratometria.od.axis1" placeholder="K1 Axis">
+                              <input type="text" class="measurement-input" v-model="queratometria.od.axis2" placeholder="K2 Axis">
                             </div>
                           </div>
                           <div class="kera-row">
                             <span class="eye-label oi">OI</span>
                             <div class="kera-fields">
-                              <input type="text" class="measurement-input" v-model="queratometria.oi.valor1" placeholder="K1">
-                              <span class="field-separator">CIL</span>
-                              <input type="text" class="measurement-input" v-model="queratometria.oi.cil1" placeholder="0.00">
+                            <input type="text" class="measurement-input" v-model="queratometria.oi.valor1" placeholder="K1">
+                            <input type="text" class="measurement-input" v-model="queratometria.oi.cil1" placeholder="K2">
+                            <input type="text" class="measurement-input" v-model="queratometria.oi.axis1" placeholder="K1 Axis">
+                            <input type="text" class="measurement-input" v-model="queratometria.oi.axis2" placeholder="K2 Axis">
                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Medida de Vista -->
-                    <div class="measurement-card">
-                      <div class="card-header">
-                        <h5 class="card-title">
-                          <i class="fas fa-glasses me-2 text-info"></i>
-                          Medida de Vista
-                        </h5>
-                      </div>
-                      <div class="card-body">
-                        <div class="measurement-table modern">
-                          <div class="table-header">
-                            <span class="eye-col"></span>
-                            <span class="header-cell">ESF</span>
-                            <span class="header-cell">CIL</span>
-                            <span class="header-cell">EJE</span>
-                            <span class="header-cell">ADD</span>
-                          </div>
-                          <div class="table-row">
-                            <span class="eye-label od">OD</span>
-                            <input type="text" class="measurement-input" v-model="medidaVista.od.esf" placeholder="±0.00">
-                            <input type="text" class="measurement-input" v-model="medidaVista.od.cil" placeholder="±0.00">
-                            <input type="text" class="measurement-input" v-model="medidaVista.od.eje" placeholder="000°">
-                            <input type="text" class="measurement-input" v-model="medidaVista.od.add" placeholder="+0.00">
-                          </div>
-                          <div class="table-row">
-                            <span class="eye-label oi">OI</span>
-                            <input type="text" class="measurement-input" v-model="medidaVista.oi.esf" placeholder="±0.00">
-                            <input type="text" class="measurement-input" v-model="medidaVista.oi.cil" placeholder="±0.00">
-                            <input type="text" class="measurement-input" v-model="medidaVista.oi.eje" placeholder="000°">
-                            <input type="text" class="measurement-input" v-model="medidaVista.oi.add" placeholder="+0.00">
-                          </div>
-                        </div>
-                        
-                        <div class="additional-fields">
-                          <div class="field-group">
-                            <label class="field-label">ADD cerca</label>
-                            <input type="text" class="measurement-input" v-model="medidaVista.addCerca" placeholder="+0.00">
-                          </div>
-                          <div class="field-group">
-                            <label class="field-label">ADD intermedia</label>
-                            <input type="text" class="measurement-input" v-model="medidaVista.addIntermedia" placeholder="+0.00">
-                          </div>
-                          <div class="field-group">
-                            <label class="field-label">DIP (mm)</label>
-                            <input type="text" class="measurement-input" v-model="medidaVista.dip" placeholder="65">
                           </div>
                         </div>
                       </div>
@@ -870,11 +790,6 @@ const historiaClinica = ref({
 const selectedCategory = ref('')
 const examinationDate = ref(new Date().toISOString().split('T')[0]) // Default to today
 
-const agudezaVisual = ref({
-  od: { avsc: '', avcc: '', ae: '' },
-  oi: { avsc: '', avcc: '', ae: '' }
-})
-
 const refraccionAutomatica = ref({
   od: { esf: '', cil: '', eje: '' },
   oi: { esf: '', cil: '', eje: '' },
@@ -882,8 +797,8 @@ const refraccionAutomatica = ref({
 })
 
 const queratometria = ref({
-  od: { valor1: '', cil1: '' },
-  oi: { valor1: '', cil1: '' }
+  od: { valor1: '', cil1: '', axis1: '', axis2: '' },
+  oi: { valor1: '', cil1: '', axis1: '', axis2: '' }
 })
 
 const lensometria1 = ref({
@@ -896,14 +811,6 @@ const lensometria2 = ref({
   od: { esf: '', cil: '', eje: '', add: '' },
   oi: { esf: '', cil: '', eje: '', add: '' },
   tipoLente: ''
-})
-
-const medidaVista = ref({
-  od: { esf: '', cil: '', eje: '', add: '' },
-  oi: { esf: '', cil: '', eje: '', add: '' },
-  addCerca: '',
-  addIntermedia: '',
-  dip: ''
 })
 
 const observaciones = ref('')
@@ -1158,6 +1065,8 @@ function closeRecordsModal() {
 }
 
 function selectRecord(record, lensometryNumber = null) {
+  console.log('Selecting record:', record, 'Category:', selectedCategory.value)
+  
   if (selectedCategory.value === 'lensometria') {
     loadLensometerData(record, lensometryNumber)
   } else if (selectedCategory.value === 'refraccion') {
@@ -1191,41 +1100,61 @@ function loadLensometerData(record, lensometryNumber) {
 }
 
 function loadRefractionData(record) {
-  // Load data into refraccionAutomatica
+  console.log('Loading refraction data:', record)
+  
+  // REFRACCIÓN AUTOMÁTICA - Primary refraction values (jTextField38, 40, 36, 39, 41, 37, 45)
   if (record.od) {
-    refraccionAutomatica.value.od.esf = record.od.esf || ''
-    refraccionAutomatica.value.od.cil = record.od.cil || ''
-    refraccionAutomatica.value.od.eje = record.od.eje || ''
+    refraccionAutomatica.value.od.esf = record.od.esf || ''  // jTextField38 - OD ESF
+    refraccionAutomatica.value.od.cil = record.od.cil || ''  // jTextField40 - OD CIL  
+    refraccionAutomatica.value.od.eje = record.od.eje || ''  // jTextField36 - OD EJE
   }
   
   if (record.oi) {
-    refraccionAutomatica.value.oi.esf = record.oi.esf || ''
-    refraccionAutomatica.value.oi.cil = record.oi.cil || ''
-    refraccionAutomatica.value.oi.eje = record.oi.eje || ''
+    refraccionAutomatica.value.oi.esf = record.oi.esf || ''  // jTextField39 - OI ESF
+    refraccionAutomatica.value.oi.cil = record.oi.cil || ''  // jTextField41 - OI CIL
+    refraccionAutomatica.value.oi.eje = record.oi.eje || ''  // jTextField37 - OI EJE
   }
   
-  refraccionAutomatica.value.dip = record.dip || ''
+  refraccionAutomatica.value.dip = record.dip || ''  // jTextField45 - DIP
   
-  // Also load keratometry data if available
+  // QUERATOMETRÍA - Keratometry values (jTextField42, 47, 43, 44)
   if (record.keratometry) {
     if (record.keratometry.od) {
-      queratometria.value.od.valor1 = record.keratometry.od.k1 || ''
-      queratometria.value.od.cil1 = record.keratometry.od.k2 || ''
-      // Also populate the axis values if your form supports them
-      // queratometria.value.od.axis1 = record.keratometry.od.k1_axis || ''
-      // queratometria.value.od.axis2 = record.keratometry.od.k2_axis || ''
+      queratometria.value.od.valor1 = record.keratometry.od.k1 || ''        // jTextField42 - OD K1
+      queratometria.value.od.cil1 = record.keratometry.od.k2 || ''          // jTextField47 - OD K2 (CIL)
+      queratometria.value.od.axis1 = record.keratometry.od.k1_axis || ''    // K1 Axis OD
+      queratometria.value.od.axis2 = record.keratometry.od.k2_axis || ''    // K2 Axis OD
     }
-    
     if (record.keratometry.oi) {
-      queratometria.value.oi.valor1 = record.keratometry.oi.k1 || ''
-      queratometria.value.oi.cil1 = record.keratometry.oi.k2 || ''
-      // Also populate the axis values if your form supports them
-      // queratometria.value.oi.axis1 = record.keratometry.oi.k1_axis || ''
-      // queratometria.value.oi.axis2 = record.keratometry.oi.k2_axis || ''
+      queratometria.value.oi.valor1 = record.keratometry.oi.k1 || ''        // jTextField43 - OI K1
+      queratometria.value.oi.cil1 = record.keratometry.oi.k2 || ''          // jTextField44 - OI K2 (CIL)
+      queratometria.value.oi.axis1 = record.keratometry.oi.k1_axis || ''    // K1 Axis OI
+      queratometria.value.oi.axis2 = record.keratometry.oi.k2_axis || ''    // K2 Axis OI
     }
   }
   
-  alert('Datos de refracción automática cargados exitosamente.')
+  // CICLOPEJÍA - Values for cycloplegia examination if performed
+  // Copying refraction values as baseline (will be modified during cycloplegia exam)
+  if (record.od) {
+    ciclopejiaValues.value.od.esf = record.od.esf || ''  // Cyclo OD ESF
+    ciclopejiaValues.value.od.cil = record.od.cil || ''  // Cyclo OD CIL
+    ciclopejiaValues.value.od.eje = record.od.eje || ''  // Cyclo OD EJE
+  }
+  
+  if (record.oi) {
+    ciclopejiaValues.value.oi.esf = record.oi.esf || ''  // Cyclo OI ESF
+    ciclopejiaValues.value.oi.cil = record.oi.cil || ''  // Cyclo OI CIL
+    ciclopejiaValues.value.oi.eje = record.oi.eje || ''  // Cyclo OI EJE
+  }
+  
+  console.log('Refraction data loaded successfully:', {
+    refraccionAutomatica: refraccionAutomatica.value,
+    queratometria: queratometria.value,
+    ciclopejiaValues: ciclopejiaValues.value
+  })
+  
+  // Match Java behavior - show success message
+  alert('Datos de refracción automática y queratometría cargados exitosamente.')
 }
 
 // Methods
@@ -1259,7 +1188,7 @@ function selectPatient(patient) {
   closePatientModal()
 }
 
-function revisarAgudezaVisual() {
+function revisarRefraccion() {
   if (canProceedToStep2.value) {
     currentStep.value = 2
   }
@@ -1273,11 +1202,10 @@ function enviarLolicli() {
   // Handle form submission
   console.log('Enviando al LOLICLI:', {
     historiaClinica: historiaClinica.value,
-    agudezaVisual: agudezaVisual.value,
     refraccionAutomatica: refraccionAutomatica.value,
     queratometria: queratometria.value,
     lensometria1: lensometria1.value,
-    medidaVista: medidaVista.value,
+    lensometria2: lensometria2.value,
     observaciones: observaciones.value,
     ciclopejia: ciclopejia.value,
     ciclopejiaValues: ciclopejiaValues.value
