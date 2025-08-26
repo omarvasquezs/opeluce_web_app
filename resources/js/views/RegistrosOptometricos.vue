@@ -631,7 +631,7 @@
               {{ selectedCategory === 'lensometria' ? 'Resultados de Lensómetro' : 'Resultados Auto Kerato-refractómetro' }}
               <span v-if="selectedCategory==='refraccion' && isMockRefraction" class="badge bg-warning text-dark ms-2">MODO DEMO</span>
             </h5>
-            <button @click="closeRecordsModal" class="classic-close-btn">×</button>
+            <button @click="closeRecordsModal" class="classic-close-btn">X</button>
           </div>
           <div class="modal-body classic-body">
             <div v-if="isLoadingRecords" class="loading-container">
@@ -775,7 +775,7 @@ const historiaClinica = ref({
   dni: '',
   fechaNacimiento: '',
   edad: '',
-  fechaAtencion: new Date().toISOString().split('T')[0], // Today's date
+  fechaAtencion: getTodayInLocalTimezone(), // Today's date in local timezone
   raza: '',
   sexo: '',
   horaAtencion: '',
@@ -786,9 +786,18 @@ const historiaClinica = ref({
   dniAcompanante: ''
 })
 
+// Helper function to get today's date in local timezone
+function getTodayInLocalTimezone() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Agudeza Visual / Refracción data
 const selectedCategory = ref('')
-const examinationDate = ref(new Date().toISOString().split('T')[0]) // Default to today
+const examinationDate = ref(getTodayInLocalTimezone()) // Default to today in local timezone
 
 const refraccionAutomatica = ref({
   od: { esf: '', cil: '', eje: '' },
